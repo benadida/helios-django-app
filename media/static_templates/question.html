@@ -1,0 +1,22 @@
+
+{#foreach $T.questions as question}
+<h4>[<a href="javascript:question_remove({$T.question$index})">x</a>] {$T.question$index + 1}. {$T.question.question}</h4>
+<ul>
+{#foreach $T.question.answers as answer}
+<li> {$T.answer}</li>
+{#/for}
+</ul>
+{#else}
+no questions yet
+{#/for}
+
+<h4>Add a Question:</h4>
+<form id="question_form" onsubmit="question_add(this); return false;" action="#">
+Q: <input type="text" name="question" size="70" /><br />
+A1: <input type="text" name="answer_1" size="70" /><br />
+A2: <input type="text" name="answer_2" size="70" /><br />
+A3: <input type="text" name="answer_3" size="70" /><br />
+A4: <input type="text" name="answer_4" size="70" /><br />
+A5: <input type="text" name="answer_5" size="70" /><br />
+<input type="submit" value="add" />
+</form>

@@ -1,0 +1,29 @@
+{% extends "helios/templates/cryptobase.html" %}
+
+{% block content %}
+  <h2 class="title">Trustees for Election {{election.name}} <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election_id=election.uuid %}">done</a>]</span></h2>
+
+<ul>
+{% for t in trustees %}
+<li> <tt>{{t.public_key_hash}}</tt>
+{% if election.frozen_at %}
+{% else %}
+[<a href="{% url helios.views.delete_trustee election.uuid %}?uuid={{t.uuid}}">x</a>]
+{% endif %}
+{% if election.encrypted_tally %}
+{% if t.decryption_factors %}
+<b>[tallied]</b>
+{% else %}
+[<a href="{% url helios.views.trustee_decrypt_and_prove election.uuid, t.uuid %}">decrypt</a>]
+{% endif %}
+{% endif %}
+</li>
+{% endfor %}
+</ul>
+
+{% if election.frozen_at %}
+<p><b>election frozen</b></p>
+{% else %}
+<p><a href="{% url helios.views.new_trustee election.uuid %}">add a trustee</a></p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "helios/templates/cryptobase.html" %}
+
+{% block content %}
+<script language="javascript">
+
+$(document).ready(function() {
+    BigInt.setup(function() {
+        ELECTION_PK = ElGamal.PublicKey.fromJSONObject({{election.public_key.toJSON|safe}});
+        TALLY = HELIOS.Tally.fromJSONObject({{election.encrypted_tally.toJSON|safe}}, ELECTION_PK);   
+        $('#sk_section').show();
+    });
+});
+
+
+function decrypt_and_prove_tally(tally, public_key, secret_key) {
+    // we need to keep track of the values of g^{voter_num} for decryption
+    var DISCRETE_LOGS = {};
+    var CURRENT_EXP = 0;
+    var CURRENT_RESULT = BigInt.ONE;
+    DISCRETE_LOGS[CURRENT_RESULT.toString()] = CURRENT_EXP;
+    
+    // go through the num_tallied
+    while (CURRENT_EXP < tally.num_tallied) {
+      CURRENT_EXP += 1;
+      CURRENT_RESULT = CURRENT_RESULT.multiply(public_key.g).mod(public_key.p);
+      DISCRETE_LOGS[CURRENT_RESULT.toString()] = CURRENT_EXP;      
+    }
+    
+    // initialize the arrays
+    var decryption_factors= [];
+    var decryption_proofs= [];
+    
+    // decrypt the tallies
+    $(tally.tally).each(function(q_num, q_tally) {
+        decryption_factors[q_num] = [];
+        decryption_proofs[q_num] = [];
+
+        $(q_tally).each(function(choice_num, choice_tally) {
+           var one_choice_result = secret_key.decryptionFactorAndProof(choice_tally, ElGamal.fiatshamir_challenge_generator);
+           
+           decryption_factors[q_num][choice_num] = one_choice_result.decryption_factor
+           decryption_proofs[q_num][choice_num] = one_choice_result.decryption_proof;
+        });
+    });
+    
+    return {'decryption_factors': decryption_factors, 'decryption_proofs' : decryption_proofs};
+}
+
+function get_secret_key() {
+  return ElGamal.SecretKey.fromJSONObject($.secureEvalJSON($('#sk_textarea').val()));
+}
+
+function do_tally() {
+  var secret_key = get_secret_key();
+  
+  var factors_and_proof = decrypt_and_prove_tally(TALLY, ELECTION_PK, secret_key);
+  
+  // json'ify it
+  var factors = factors_and_proof.decryption_factors
+  var decryption_proofs = $(factors_and_proof.decryption_proofs).map(function(i, q_proof) {
+      return $(q_proof).map(function(j, a_proof){
+         return a_proof.toJSONObject(); 
+      });
+  });
+  
+  // do the post
+  $.post("./upload-decryption", {
+      'decryption_factors': $.toJSON(factors),
+      'decryption_proofs': $.toJSON(decryption_proofs)
+  }, function(result) {
+      alert('partial decryption uploaded!');
+      document.location = '../../view';
+  });
+}
+
+</script>
+  <h2 class="title">Decrypt Result for {{election.name}}</h2>
+
+<p>
+    <b>Trustee:</b> <tt>{{trustee.public_key_hash}}</tt>
+    </p>
+    <p>
+      The encrypted tally for your election has been computed. Now it's time to provide this trustee's secret key to compute a partial decryption which, when combined with other trustees' partial decryptions, will yield the results.
+    </p>
+    
+    <p>
+      <b>Note</b>: this decryption will only be accepted if you provide the correct secret key.
+    </p>
+
+  <div id="sk_section" style="display:none;">
+      <form onsubmit="return false;">
+          This trustee's secret key:<br />
+          <textarea id="sk_textarea" cols="60" rows="5"></textarea>
+      </form>
+      <p id="tally_section">
+          <button onclick="do_tally();">Tally!</button>
+      </p>
+  </div>
+
+  <div id="applet_div">
+  </div>
+
+{% endblock %}
