@@ -322,7 +322,7 @@ class Election(HeliosObject):
         
   def _process_value_in(self, field_name, field_value):
     if field_name == 'frozen_at':
-      if type(field_value) == str:
+      if type(field_value) == str or type(field_value) == unicode:
         return datetime.datetime.strptime(field_value, '%Y-%m-%d %H:%M:%S')
       
     if field_name == 'public_key':

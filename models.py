@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Data Objects for Votwee/Helios.
+Data Objects for Helios.
 
 Ben Adida
 (ben@adida.net)
@@ -99,7 +99,12 @@ class Election(db.Model, electionalgs.Election):
   def get_by_uuid(cls, uuid):
     query = cls.all()
     query.filter('uuid = ', uuid)
-    return query.fetch(1)[0]
+    elections = query.fetch(1)
+    
+    if len(elections) > 0:
+      return elections[0]
+    else:
+      return None
   
   @classmethod
   def get_by_short_name(cls, short_name):

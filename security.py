@@ -13,6 +13,8 @@ from django.conf import settings
 from models import *
 from auth.security import get_user
 
+import helios
+
 #
 # some common election checks
 #
@@ -42,6 +44,12 @@ def do_election_checks(election, props):
       raise PermissionDenied()
 
   
+def get_election_by_uuid(uuid):
+  if not uuid:
+    raise Exception("no election ID")
+      
+  return Election.get_by_uuid(uuid)
+  
 # decorator for views that pertain to an election
 # takes parameters:
 # frozen - is the election frozen
@@ -49,8 +57,8 @@ def do_election_checks(election, props):
 def election_view(**checks):
   
   def election_view_decorator(func):
-    def election_view_wrapper(request, election_id, *args, **kw):
-      election = Election.get_by_uuid(election_id)
+    def election_view_wrapper(request, election_id=None, *args, **kw):
+      election = get_election_by_uuid(election_id)
     
       # do checks
       do_election_checks(election, checks)
@@ -73,8 +81,8 @@ def api_client_can_admin_election(api_client, election):
 def election_admin(**checks):
   
   def election_admin_decorator(func):
-    def election_admin_wrapper(request, election_id, *args, **kw):
-      election = Election.get_by_uuid(election_id)
+    def election_admin_wrapper(request, election_id=None, *args, **kw):
+      election = get_election_by_uuid(election_id)
 
       user = get_user(request)
       if not user or not (user == election.admin):

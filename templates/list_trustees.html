@@ -1,7 +1,7 @@
 {% extends "helios/templates/cryptobase.html" %}
 
 {% block content %}
-  <h2 class="title">Trustees for Election {{election.name}} <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election_id=election.uuid %}">done</a>]</span></h2>
+  <h2 class="title">Trustees for Election {{election.name}} <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">done</a>]</span></h2>
 
 <ul>
 {% for t in trustees %}

@@ -1,5 +1,5 @@
 """
-Votwee/Helios URLs for Election related stuff
+Helios URLs for Election related stuff
 
 Ben Adida (ben@adida.net)
 """
