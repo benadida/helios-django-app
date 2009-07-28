@@ -6,7 +6,7 @@ Ben Adida (ben@adida.net)
 """
 
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect, Http404, HttpResponseNotAllowed
+from django.http import *
 from google.appengine.ext import db
 from mimetypes import guess_type
 
@@ -93,6 +93,9 @@ import forms
 
 @login_required
 def election_new(request):
+  if not can_create_election(request):
+    return HttpResponseForbidden('only the admin can create an election')
+    
   if request.method == "GET":
     election_form = forms.ElectionForm()
   else:
@@ -103,6 +106,9 @@ def election_new(request):
       election_params = dict(election_form.cleaned_data)
       election_params['uuid'] = str(uuid.uuid1())
       election_params['cast_url'] = reverse(one_election_cast, args=[election_params['uuid']])
+      
+      # self registration
+      election_params['self_registration'] = helios.SELF_REGISTRATION
 
       election = Election(**election_params)
       election.admin = get_user(request)
@@ -355,6 +361,9 @@ def one_election_build(request, election):
   
 @election_view()
 def one_election_register(request, election):
+  if not election.self_registration:
+    return HttpResponseForbidden('self registration is disabled for this election')
+    
   check_csrf(request)
     
   user = get_user(request)

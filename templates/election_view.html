@@ -64,6 +64,7 @@ Election Fingerprint<br />
 </div>
 {% endif %}
 
+{% if election.self_registration %}
 {% if user %}
 {% if voter %}
 <p>You ({{user.user_id}}) are registered to vote in this election.
@@ -85,6 +86,7 @@ You ({{user.user_id}}) are <em>not</em> registered to vote in this election.<br 
 {% else %}
 not logged in.
 {% endif %}
+{% endif %}
 
 {% if election.frozen_at %}
 {% if votes %}
@@ -102,8 +104,10 @@ at {{votes.0.cast_at}}.
 [the new vote will replace the old]
 {% endif %}
 
+{% if election.self_registration %}
 {% if notregistered %}
 [you are not registered for this election, so you won't be able to cast a vote]
+{% endif %}
 {% endif %}
 
 {% endif %}

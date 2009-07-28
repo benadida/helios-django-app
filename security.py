@@ -13,6 +13,8 @@ from django.conf import settings
 from models import *
 from auth.security import get_user
 
+from django.http import HttpResponseRedirect
+
 import helios
 
 #
@@ -97,3 +99,10 @@ def election_admin(**checks):
     
   return election_admin_decorator
 
+def can_create_election(request):
+  user = get_user(request)
+  if helios.ADMIN_ONLY:
+    return user == helios.ADMIN
+  else:
+    return user != None
+  

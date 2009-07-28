@@ -55,6 +55,9 @@ class Election(db.Model, electionalgs.Election):
   # open registration?
   openreg = db.BooleanProperty(default=False)
   
+  # self registration
+  self_registration = db.BooleanProperty(default=True)
+  
   # voter aliases?
   use_voter_aliases = db.BooleanProperty(default=False)
   
