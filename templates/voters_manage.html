@@ -1,0 +1,36 @@
+{% extends TEMPLATE_BASE %}
+
+{% block content %}
+  <h2 class="title">{{election.name}} &mdash; Manage Voters <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election_id=election.uuid %}">done</a>]</span></h2>
+
+<table class="pretty">
+<tr><th>
+Voter Name
+</th></tr>
+{% for voter in voters %}
+<tr><td>
+{{voter.voter_id}}
+{% if election.frozen_at %}
+{% else %}
+[<a href="{% url helios.views.voter_delete election.uuid, voter.uuid %}">x</a>]
+{% endif %}
+</td></tr>
+{% endfor %}
+</table>
+
+<p>
+    Please enter CSV content for your list of voters as follows:
+</p>
+<pre>
+    password,ben@adida.net,Ben Adida
+    password,bob@acme.org,Bob Acme
+    ...
+</pre> 
+<form method="post" action="upload">
+    <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
+    
+    <textarea name="voters_csv" cols="80" rows="10"></textarea><br /><br />
+    <input type="submit" value="go" />
+</form>
+
+{% endblock %}

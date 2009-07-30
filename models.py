@@ -257,6 +257,18 @@ class Voter(db.Model, electionalgs.Voter):
       return lst[0]
     else:
       return None
+      
+  @classmethod
+  def get_by_election_and_uuid(cls, election, uuid):
+    q = cls.all()
+    q.filter('election = ', election)
+    q.filter('uuid = ', uuid)
+
+    lst = q.fetch(1)
+    if len(lst) > 0:
+      return lst[0]
+    else:
+      return None
   
   @classmethod
   def get_by_user(cls, user):
@@ -268,7 +280,7 @@ class Voter(db.Model, electionalgs.Voter):
     
   @property
   def election_uuid(self):
-    return self.election.uuid  
+    return self.election.uuid
   
   def put(self, *args, **kwargs):
     """

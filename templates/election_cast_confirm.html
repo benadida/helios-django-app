@@ -13,7 +13,8 @@
 <h3>Your Identity</h3>
 {% if user %}
 <p style="font-size: 1.4em;">
-    {{user.user_id}} [{{user.user_type}}]
+    {{user.user_id}} [{{user.user_type}}]<br />
+    (<a href="{% url auth.views.logout %}?return_url=">logout</a>)
 </p>
 
 {% if voter %}

@@ -18,7 +18,7 @@
 {% if not election.frozen_at %}
 <li> <a href="{% url helios.views.one_election_build election_id=election.uuid %}">questions and answers</a></li>
 <li> <a href="{% url helios.views.list_trustees_view election.uuid %}">trustees</a></li>
-<li> <a href="{% url helios.views.voters_upload election_id=election.uuid %}">upload voters</a>.</li>
+<li> <a href="{% url helios.views.voters_manage election_id=election.uuid %}">manage voters</a></li>
 <li> <a href="{% url helios.views.one_election_freeze election_id=election.uuid %}"><em>freeze</em> election and start voting.</a></li>
 {% else %}
 

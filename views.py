@@ -14,7 +14,7 @@ import csv
 
 from crypto import algs, electionalgs
 from crypto import utils as cryptoutils
-from helios import utils
+from helios import utils as helios_utils
 from view_utils import *
 from auth.security import *
 
@@ -301,26 +301,14 @@ def one_election_bboard(request, election):
     
   return render_template(request, 'election_bboard', {'election': election, 'voters': voters, 'next_after': next_after,
                 'voter_id': request.GET.get('voter_id', '')})
-  
-@election_admin()
-def one_election_voters_manage(request, election, admin, api_client):
-  voters = election.get_voters()
-  voters_json = utils.to_json([v.toJSONDict() for v in voters])
-  
-  return render_template(request, "election_voters_manage", {'voters_json' : voters_json, 'voters': voters,'election': election})
-  
+    
 @election_admin(frozen=False)
-def one_election_voters_delete(request, election, admin, api_client):
-  voter_id_list = request.POST['voter_ids'].split(",")
-  voters = [Voter.objects.get(voter_id = voter_id) for voter_id in voter_id_list]
-  for voter in voters:
-    if election != voter.election:
-      return HttpResponseServerError('bad voter')
-
-  for voter in voters:
+def voter_delete(request, election, voter_uuid):
+  voter = Voter.get_by_election_and_uuid(election, voter_uuid)
+  if voter:
     voter.delete()
     
-  return SUCCESS
+  return HttpResponseRedirect(reverse(voters_manage, args=[election.uuid]))
 
 @election_admin(frozen=False)
 def one_election_set_reg(request, election, admin, api_client):
@@ -499,6 +487,18 @@ def one_election_set_result_and_proof(request, election):
     return SUCCESS
   
   
+@election_admin()
+def voters_manage(request, election):
+  """
+  Show the list of voters
+  """
+  after = request.GET.get('after', None)
+  limit = int(request.GET.get('limit', 200))
+
+  voters = Voter.get_by_election(election, after=request.GET.get('after', None), limit=limit+1)
+  
+  return render_template(request, 'voters_manage', {'election': election, 'voters': voters})
+  
 @election_admin(frozen=False)
 def voters_upload(request, election):
   """
@@ -507,9 +507,7 @@ def voters_upload(request, election):
   
   name is needed only if voter_type is static
   """
-  if request.method == "GET":
-    return render_template(request, 'voters_upload', {'election': election})
-  else:
+  if request.method == "POST":
     voters_csv_lines = request.POST['voters_csv'].split("\n")
     reader = csv.reader(voters_csv_lines)
 
@@ -527,8 +525,7 @@ def voters_upload(request, election):
         
       if voter_type == 'password':
         # create the user
-        # FIXME: generate password
-        user = User(user_type = voter_type, user_id = voter_id, name=name, info={'password': 'FIXME'})
+        user = User.get_or_create(user_type=voter_type, user_id=voter_id, info = {'password': helios_utils.random_string(10)})
         user.put()
       
       # create the voter
@@ -540,7 +537,7 @@ def voters_upload(request, election):
 
       voter.put()
     
-    return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+  return HttpResponseRedirect(reverse(voters_manage, args=[election.uuid]))
 
 
     
@@ -564,19 +561,6 @@ def one_voter(request, election, admin, api_client, voter_uuid):
   """
   voter = Voter.get_by_uuid(voter_uuid)
   return voter.toJSONDict(with_vote=True)  
-
-@election_admin(frozen=False)
-def one_voter_delete(request, election, voter_id):
-  try:
-    voter = Voter.objects.get(voter_id = voter_id)
-    voter.delete()
-  except Voter.DoesNotExist:
-    logging.info("no voter")
-
-  if get_request(user):
-    return HttpResponseRedirect(reverse(one_election_voters_manage, args=[election.election_id]))
-  else:
-    return SUCCESS
 
 ##
 ## cast ballots

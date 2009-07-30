@@ -29,7 +29,6 @@ urlpatterns = patterns('',
     # construct election
     (r'^/set_pk$', one_election_set_pk),
     (r'^/build$', one_election_build),
-    (r'^/voters_upload$', voters_upload),
     (r'^/save_questions$', one_election_save_questions),
     (r'^/register$', one_election_register),
     (r'^/freeze$', one_election_freeze), # includes freeze_2 as POST target
@@ -44,8 +43,10 @@ urlpatterns = patterns('',
     
     # managing voters
     (r'^/voters/$', voter_list),
+    (r'^/voters/upload$', voters_upload),
+    (r'^/voters/manage$', voters_manage),
     (r'^/voters/(?P<voter_id>[^/]+)$', one_voter),
-    (r'^/voters/(?P<voter_id>[^/]+)/delete$', one_voter_delete),
+    (r'^/voters/(?P<voter_uuid>[^/]+)/delete$', voter_delete),
     
     # ballots
     (r'^/ballots/$', ballot_list),
