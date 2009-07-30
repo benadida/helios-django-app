@@ -539,7 +539,12 @@ def voters_upload(request, election):
     
   return HttpResponseRedirect(reverse(voters_manage, args=[election.uuid]))
 
-
+@election_admin(frozen=True)
+def voters_email(request, election):
+  subject = request.POST['subject']
+  body = request.POST['body']
+  
+  # FIXME
     
 
 # Individual Voters
