@@ -503,7 +503,9 @@ def one_election_set_result_and_proof(request, election):
 def voters_upload(request, election):
   """
   Upload a CSV of password-based voters with
-  name, email
+  voter_type, voter_id, name
+  
+  name is needed only if voter_type is static
   """
   if request.method == "GET":
     return render_template(request, 'voters_upload', {'election': election})
@@ -517,17 +519,21 @@ def voters_upload(request, election):
       if len(voter) < 2:
         continue
 
-      name = voter[0]
-      email = voter[1]
+      voter_type = voter[0]
+      voter_id = voter[1]
       
-      # create the user
-      # FIXME: generate the voter
-      user = User(user_type = 'password', user_id = email, name=name, info={'password': 'FIXME'})
-      user.put()
+      if len(voter) > 2:
+        name = voter[2]
+        
+      if voter_type == 'password':
+        # create the user
+        # FIXME: generate password
+        user = User(user_type = voter_type, user_id = voter_id, name=name, info={'password': 'FIXME'})
+        user.put()
       
       # create the voter
       voter_uuid = str(uuid.uuid1())
-      voter = Voter(uuid= voter_uuid, voter_type = 'password', voter_id = voter[1], election = election)
+      voter = Voter(uuid= voter_uuid, voter_type = voter_type, voter_id = voter_id, name = name,election = election)
 
       if election.use_voter_aliases:
         voter.alias = "V_" + str(election.num_voters)
