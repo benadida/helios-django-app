@@ -499,6 +499,45 @@ def one_election_set_result_and_proof(request, election):
     return SUCCESS
   
   
+@election_admin(frozen=False)
+def voters_upload(request, election):
+  """
+  Upload a CSV of password-based voters with
+  name, email
+  """
+  if request.method == "GET":
+    return render_template(request, 'voters_upload', {'election': election})
+  else:
+    voters_csv_lines = request.POST['voters_csv'].split("\n")
+    reader = csv.reader(voters_csv_lines)
+
+    for voter in reader:
+
+      # bad line
+      if len(voter) < 2:
+        continue
+
+      name = voter[0]
+      email = voter[1]
+      
+      # create the user
+      # FIXME: generate the voter
+      user = User(user_type = 'password', user_id = email, name=name, info={'password': 'FIXME'})
+      user.put()
+      
+      # create the voter
+      voter_uuid = str(uuid.uuid1())
+      voter = Voter(uuid= voter_uuid, voter_type = 'password', voter_id = voter[1], election = election)
+
+      if election.use_voter_aliases:
+        voter.alias = "V_" + str(election.num_voters)
+
+      voter.put()
+    
+    return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+
+
+    
 
 # Individual Voters
 @election_view()
