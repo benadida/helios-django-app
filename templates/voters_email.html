@@ -1,0 +1,16 @@
+{% extends TEMPLATE_BASE %}
+
+{% block content %}
+
+  <h2 class="title">Email Voters</h2>
+  
+  <form class="prettyform" action="" method="POST" id="create_election_form">
+    <table class="pretty">
+     {{email_form.as_table}}
+     </table>
+  <div>
+  <label for="">&nbsp;</label><input type="submit" value="Send" id="send_button" />
+  </div>
+  </form>
+
+{% endblock %}

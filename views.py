@@ -6,6 +6,7 @@ Ben Adida (ben@adida.net)
 """
 
 from django.core.urlresolvers import reverse
+from django.core.mail import send_mail
 from django.http import *
 from google.appengine.ext import db
 from mimetypes import guess_type
@@ -25,7 +26,7 @@ import uuid, datetime
 
 from models import *
 
-import signals
+import forms, signals
 
 # Parameters for everything
 ELGAMAL_PARAMS = algs.ElGamal()
@@ -88,8 +89,6 @@ def election_keygenerator(request, election):
   """
   eg_params_json = utils.to_json(ELGAMAL_PARAMS.toJSONDict())
   return render_template(request, "election_keygenerator", {'eg_params_json': eg_params_json})
-
-import forms
 
 @login_required
 def election_new(request):
@@ -541,11 +540,36 @@ def voters_upload(request, election):
 
 @election_admin(frozen=True)
 def voters_email(request, election):
-  subject = request.POST['subject']
-  body = request.POST['body']
-  
-  # FIXME
+  if request.method == "GET":
+    email_form = forms.EmailVotersForm()
+  else:
+    email_form = forms.EmailVotersForm(request.POST)
     
+    if email_form.is_valid():
+      
+      # go through all voters
+      # FIXME for large # of voters
+      voters = Voter.get_by_election(election)
+      
+      for voter in voters:
+        if voter.voter_type != 'password':
+          continue
+        
+        user = voter.user
+        body = email_form.cleaned_data['body'] + """
+Your login email: %s
+Your password:    %s
+
+--
+Helios
+""" % (user.user_id, user.info['password'])
+
+        send_mail(email_form.cleaned_data['subject'], body, settings.SERVER_EMAIL, [user.user_id], fail_silently=False)
+      
+      
+      return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+    
+  return render_template(request, "voters_email", {'email_form': email_form})    
 
 # Individual Voters
 @election_view()
@@ -560,12 +584,22 @@ def voter_list(request, election):
   
 @election_view()
 @json
-def one_voter(request, election, admin, api_client, voter_uuid):
+def one_voter(request, election, voter_uuid):
   """
   View a single voter's info as JSON.
   """
-  voter = Voter.get_by_uuid(voter_uuid)
-  return voter.toJSONDict(with_vote=True)  
+  voter = Voter.get_by_election_and_uuid(election, voter_uuid)
+  return voter.toJSONDict()  
+
+@election_view()
+@json
+def voter_votes(request, election, voter_uuid):
+  """
+  all cast votes by a voter
+  """
+  voter = Voter.get_by_election_and_uuid(election, voter_uuid)
+  votes = CastVote.get_by_election_and_voter(election, voter)
+  return [v.toJSONDict()  for v in votes]
 
 ##
 ## cast ballots

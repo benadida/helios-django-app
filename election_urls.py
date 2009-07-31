@@ -45,7 +45,9 @@ urlpatterns = patterns('',
     (r'^/voters/$', voter_list),
     (r'^/voters/upload$', voters_upload),
     (r'^/voters/manage$', voters_manage),
-    (r'^/voters/(?P<voter_id>[^/]+)$', one_voter),
+    (r'^/voters/email$', voters_email),
+    (r'^/voters/(?P<voter_uuid>[^/]+)$', one_voter),
+    (r'^/voters/(?P<voter_uuid>[^/]+)/cast-votes$', voter_votes),
     (r'^/voters/(?P<voter_uuid>[^/]+)/delete$', voter_delete),
     
     # ballots

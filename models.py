@@ -277,6 +277,10 @@ class Voter(db.Model, electionalgs.Voter):
     q.filter('voter_id = ', user.user_id)
 
     return [v for v in q]
+  
+  @property
+  def user(self):
+    return User.get_by_type_and_id(self.voter_type, self.voter_id)
     
   @property
   def election_uuid(self):

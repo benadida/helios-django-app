@@ -13,3 +13,7 @@ class ElectionForm(forms.Form):
   # these should have defaults
   ballot_type = forms.CharField(max_length=60, widget=forms.HiddenInput, initial='homomorphic')
   tally_type = forms.CharField(max_length=60, widget=forms.HiddenInput, initial='homomorphic')
+  
+class EmailVotersForm(forms.Form):
+  subject = forms.CharField(max_length=80)
+  body = forms.CharField(max_length=2000, widget=forms.Textarea)
