@@ -14,7 +14,7 @@
 {% if user %}
 <p style="font-size: 1.4em;">
     {{user.user_id}} [{{user.user_type}}]<br />
-    (<a href="{% url auth.views.logout %}?return_url=">logout</a>)
+    (<a href="{% url auth.views.logout %}?return_url={{CURRENT_URL}}">logout</a>)
 </p>
 
 {% if voter %}
