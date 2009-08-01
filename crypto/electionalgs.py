@@ -413,6 +413,12 @@ class CastVote(HeliosObject):
     o.election = election
     o.set_from_args(**d)
     return o
+    
+  def toJSONDict(self, include_vote=True):
+    result = super(CastVote,self).toJSONDict()
+    if not include_vote:
+      del result['vote']
+    return result
 
   @classmethod
   def fromOtherObject(cls, o, election):

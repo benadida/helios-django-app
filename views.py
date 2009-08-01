@@ -601,6 +601,15 @@ def voter_votes(request, election, voter_uuid):
   votes = CastVote.get_by_election_and_voter(election, voter)
   return [v.toJSONDict()  for v in votes]
 
+@election_view()
+@json
+def voter_last_vote(request, election, voter_uuid):
+  """
+  all cast votes by a voter
+  """
+  voter = Voter.get_by_election_and_uuid(election, voter_uuid)
+  return voter.last_cast_vote().toJSONDict()
+
 ##
 ## cast ballots
 ##
@@ -609,7 +618,7 @@ def voter_votes(request, election, voter_uuid):
 @json
 def ballot_list(request, election):
   voters = Voter.get_by_election(election, cast=True)
-  return [v.last_cast_vote().toJSONDict() for v in voters]
+  return [v.last_cast_vote().toJSONDict(include_vote=False) for v in voters]
 
 
   
