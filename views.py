@@ -43,13 +43,11 @@ ELGAMAL_PARAMS.g = 1488749222496318763428242153718604080130400801774349230448173
 # single election server? Load the single electionfrom models import Election
 from django.conf import settings
 
-def test(request):
-  str = ["%s : %s\n" % (k,request.META[k]) for k in request.META.keys()]
-  str += "\n\n request.path_info is %s " % request.path_info
-  return HttpResponse(str)
+# a helper function
+def get_election_url(election):
+  return settings.URL_HOST + reverse(one_election_view, args=[election.uuid])  
 
 # simple static views
-  
 def home(request):
   user = get_user(request)
   if user:
@@ -557,12 +555,14 @@ def voters_email(request, election):
         
         user = voter.user
         body = email_form.cleaned_data['body'] + """
+        
+Election URL: %s
 Your login email: %s
 Your password:    %s
 
 --
 Helios
-""" % (user.user_id, user.info['password'])
+""" % (get_election_url(election), user.user_id, user.info['password'])
 
         send_mail(email_form.cleaned_data['subject'], body, settings.SERVER_EMAIL, [user.user_id], fail_silently=False)
       
