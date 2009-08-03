@@ -98,7 +98,7 @@ at {{votes.0.cast_at}}.
 </p>
 {% endif %}
 
-<p ><a style="font-size: 18pt;" target="_blank" href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">Vote in this election</a><br />
+<p ><a style="font-size: 18pt;" href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">Vote in this election</a><br />
 {% if election.result %}
 [the tally has already been computed, but you can view the voting interface anyways]
 {% else %}
