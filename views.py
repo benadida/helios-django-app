@@ -104,8 +104,8 @@ def election_new(request):
       election_params['uuid'] = str(uuid.uuid1())
       election_params['cast_url'] = reverse(one_election_cast, args=[election_params['uuid']])
       
-      # self registration
-      election_params['self_registration'] = helios.SELF_REGISTRATION
+      # registration starts closed
+      election_params['openreg'] = False
 
       election = Election(**election_params)
       election.admin = get_user(request)
@@ -308,18 +308,15 @@ def voter_delete(request, election, voter_uuid):
   return HttpResponseRedirect(reverse(voters_manage, args=[election.uuid]))
 
 @election_admin(frozen=False)
-def one_election_set_reg(request, election, admin, api_client):
+def one_election_set_reg(request, election):
   """
   Set whether this is open registration or not
   """
-  open_p = bool(int(request.POST['open_p']))
-  election.openreg_enabled = open_p
+  open_p = bool(int(request.GET['open_p']))
+  election.openreg = open_p
   election.save()
   
-  if get_user(request):
-    return HttpResponseRedirect(reverse(one_election_voters_manage, args=[election.election_id]))
-  else:
-    return SUCCESS
+  return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
 
 @election_admin()
 def one_election_archive(request, election, admin, api_client):
@@ -346,8 +343,8 @@ def one_election_build(request, election):
   
 @election_view()
 def one_election_register(request, election):
-  if not election.self_registration:
-    return HttpResponseForbidden('self registration is disabled for this election')
+  if not election.openreg:
+    return HttpResponseForbidden('registration is closed for this election')
     
   check_csrf(request)
     
@@ -375,17 +372,6 @@ def one_election_save_questions(request, election):
   # always a machine API
   return SUCCESS
 
-@election_admin(frozen=False)
-def one_election_set_pk(request, election):
-  if election.public_key:
-    return HttpResponseServerError("failure: Public Key exists already")
-  
-  election.public_key = algs.EGPublicKey.fromJSONDict(utils.from_json(request.POST['public_key_json']))
-  
-  storage.election_update(election)
-  
-  return SUCCESS
-  
 @election_admin(frozen=False)
 def one_election_freeze(request, election):
   # figure out the number of questions and trustees

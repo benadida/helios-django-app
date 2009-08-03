@@ -340,6 +340,13 @@ class Election(HeliosObject):
       return field_value.toJSONDict()
     
   @property
+  def registration_status_pretty(self):
+    if self.openreg:
+      return "Open"
+    else:
+      return "Closed"
+    
+  @property
   def pretty_result(self):
     if not self.result:
       return None

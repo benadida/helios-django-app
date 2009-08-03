@@ -53,11 +53,10 @@ class Election(db.Model, electionalgs.Election):
   tally_type = db.StringProperty(multiline=False)
   
   # open registration?
+  # this is now used to indicate the state of registration,
+  # whether or not the election is frozen
   openreg = db.BooleanProperty(default=False)
-  
-  # self registration
-  self_registration = db.BooleanProperty(default=True)
-  
+    
   # voter aliases?
   use_voter_aliases = db.BooleanProperty(default=False)
   
@@ -141,9 +140,12 @@ class Election(db.Model, electionalgs.Election):
     look up the list of voters, make a big file, and hash it
     FIXME: for more than 1000 voters, need to loop multiple times
     """
-    voters = Voter.get_by_election(self)
-    voters_json = utils.to_json([v.toJSONDict() for v in voters])
-    self.voters_hash = utils.hash_b64(voters_json)
+    if self.openreg:
+      self.voters_hash = None
+    else:
+      voters = Voter.get_by_election(self)
+      voters_json = utils.to_json([v.toJSONDict() for v in voters])
+      self.voters_hash = utils.hash_b64(voters_json)
     
   def increment_voters(self):
     increment_counter(self.key(), 'num_voters')

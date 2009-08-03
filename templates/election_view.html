@@ -8,12 +8,21 @@
 <div style="float:right; border-left: 1px dashed black; padding: 0px 20px 5px 20px;">
 <h3>Administration</h3>
 {% if election.frozen_at %}
-<b>Election in Progress</b>
 {% else %}
 <b>Election under Construction</b>
 {% endif %}
 
 <ul>
+<li> Registration 
+<b>{{ election.registration_status_pretty }}</b>
+{% if not election.frozen_at %}
+{% if election.openreg %}
+[<a href="{% url helios.views.one_election_set_reg election.uuid %}?open_p=0">turn off</a>]
+{% else %}
+[<a href="{% url helios.views.one_election_set_reg election.uuid %}?open_p=1">turn on</a>]
+{% endif %}
+{% endif %}
+</li>
 
 {% if not election.frozen_at %}
 <li> <a href="{% url helios.views.one_election_build election_id=election.uuid %}">questions and answers</a></li>
@@ -66,7 +75,6 @@ Election Fingerprint<br />
 </div>
 {% endif %}
 
-{% if election.self_registration %}
 {% if user %}
 {% if voter %}
 <p>You ({{user.user_id}}) are registered to vote in this election.
@@ -79,15 +87,15 @@ Your voter alias is {{voter.alias}}.
 You ({{user.user_id}}) are <em>not</em> registered to vote in this election.<br />
 {% if election.result %}
 {% else %}
+{% if election.openreg %}
 <form method="post" action="{% url helios.views.one_election_register election.uuid %}">
 <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
 <input type="submit" value="register!" />
 </form>
 {% endif %}
 {% endif %}
-{% else %}
-not logged in.
 {% endif %}
+{% else %}
 {% endif %}
 
 {% if election.frozen_at %}
@@ -106,10 +114,8 @@ at {{votes.0.cast_at}}.
 [the new vote will replace the old]
 {% endif %}
 
-{% if election.self_registration %}
 {% if notregistered %}
 [you are not registered for this election, so you won't be able to cast a vote]
-{% endif %}
 {% endif %}
 
 {% endif %}

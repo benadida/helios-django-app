@@ -5,5 +5,3 @@ TEMPLATE_BASE = "helios/templates/base.html"
 ADMIN_ONLY = False
 ADMIN = None
 
-# self registration
-SELF_REGISTRATION = True
