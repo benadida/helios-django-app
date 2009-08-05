@@ -486,9 +486,9 @@ def voters_manage(request, election):
 def voters_upload(request, election):
   """
   Upload a CSV of password-based voters with
-  voter_type, voter_id, name
+  voter_type, voter_id, email, name
   
-  name is needed only if voter_type is static
+  name and email are needed only if voter_type is static
   """
   if request.method == "POST":
     voters_csv_lines = request.POST['voters_csv'].split("\n")
@@ -502,18 +502,23 @@ def voters_upload(request, election):
 
       voter_type = voter[0]
       voter_id = voter[1]
+      name = voter_id
+      email = voter_id
       
       if len(voter) > 2:
-        name = voter[2]
+        email = voter[2]
+      
+      if len(voter) > 3:
+        name = voter[3]
         
       if voter_type == 'password':
         # create the user
-        user = User.get_or_create(user_type=voter_type, user_id=voter_id, info = {'password': helios_utils.random_string(10)})
+        user = User.get_or_create(user_type=voter_type, user_id=voter_id, info = {'password': helios_utils.random_string(10), 'email': email, 'name': name})
         user.put()
       
       # create the voter
       voter_uuid = str(uuid.uuid1())
-      voter = Voter(uuid= voter_uuid, voter_type = voter_type, voter_id = voter_id, name = name,election = election)
+      voter = Voter(uuid= voter_uuid, voter_type = voter_type, voter_id = voter_id, name = name, election = election)
 
       if election.use_voter_aliases:
         voter.alias = "V_" + str(election.num_voters)
@@ -542,15 +547,15 @@ def voters_email(request, election):
         user = voter.user
         body = email_form.cleaned_data['body'] + """
         
-Election URL: %s
-Your login email: %s
-Your password:    %s
+Election URL:  %s
+Your username: %s
+Your password: %s
 
 --
 Helios
 """ % (get_election_url(election), user.user_id, user.info['password'])
 
-        send_mail(email_form.cleaned_data['subject'], body, settings.SERVER_EMAIL, [user.user_id], fail_silently=False)
+        send_mail(email_form.cleaned_data['subject'], body, settings.SERVER_EMAIL, ["%s <%s>" % (user.info['name'], user.info['email'])], fail_silently=False)
       
       
       return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
