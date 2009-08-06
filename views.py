@@ -93,6 +93,8 @@ def election_new(request):
   if not can_create_election(request):
     return HttpResponseForbidden('only the admin can create an election')
     
+  error = None
+  
   if request.method == "GET":
     election_form = forms.ElectionForm()
   else:
@@ -107,14 +109,19 @@ def election_new(request):
       # registration starts closed
       election_params['openreg'] = False
 
-      election = Election(**election_params)
-      election.admin = get_user(request)
-      election.api_client = get_api_client(request)
-      election.put()
+      user = get_user(request)
+      election_params['admin'] = user
+      # election_params['api_client'] = get_api_client(request)
+
+      election, created_p = Election.get_or_create(**election_params)
       
-      return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+      if created_p:
+        counters.increment(GLOBAL_COUNTER_ELECTIONS)
+        return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+      
+      error = "An election with short name %s already exists" % election_params['short_name']
     
-  return render_template(request, "election_new", {'election_form': election_form})
+  return render_template(request, "election_new", {'election_form': election_form, 'error': error})
   
 @election_view()
 @json

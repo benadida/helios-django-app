@@ -85,6 +85,17 @@ class Election(db.Model, electionalgs.Election):
   num_cast_votes = db.IntegerProperty(default = 0)
 
   @classmethod
+  def get_or_create(cls, **kwargs):
+    key_name = kwargs['short_name']
+    obj = cls.get_by_key_name(key_name)
+    created_p = False
+    if not obj:
+      created_p = True
+      obj = cls(key_name = key_name, **kwargs)
+      obj.put()
+    return obj, created_p
+
+  @classmethod
   def get_by_user_as_admin(cls, user, include_archived=False):
     query = cls.all()
     query.filter('admin =', user)
@@ -170,9 +181,11 @@ class Election(db.Model, electionalgs.Election):
       
     super(Election, self).put(*args, **kwargs)
 
+    ## TRANSACTION PROBLEM, we won't increment here
     # do the increment afterwards in case of an exception which prevents the creation
-    if increment_p:
-      counters.increment(GLOBAL_COUNTER_ELECTIONS)
+    #if increment_p:
+    #  counters.increment(GLOBAL_COUNTER_ELECTIONS)
+    
     
   def freeze(self):
     self.frozen_at = datetime.datetime.utcnow()

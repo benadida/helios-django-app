@@ -15,6 +15,7 @@
 
 from google.appengine.api import memcache 
 from google.appengine.ext import db
+from google.appengine.api.datastore import _CurrentTransactionKey
 import random
 
 class GeneralCounterShardConfig(db.Model):
@@ -28,7 +29,16 @@ class GeneralCounterShard(db.Model):
   name = db.StringProperty(required=True)
   count = db.IntegerProperty(required=True, default=0)
   
-            
+def get_config(name):
+  if _CurrentTransactionKey():
+    config = GeneralCounterShardConfig.get_by_key_name(name)
+    if not config:
+      config = GeneralCounterShardConfig(name=name)
+      config.put()
+    return config
+  else:
+    return GeneralCounterShardConfig.get_or_insert(name, name=name)
+  
 def get_count(name):
   """Retrieve the value for a given sharded counter.
   
@@ -50,7 +60,7 @@ def increment(name):
   Parameters:
     name - The name of the counter  
   """
-  config = GeneralCounterShardConfig.get_or_insert(name, name=name)
+  config = get_config(name)
   def txn():
     index = random.randint(0, config.num_shards - 1)
     shard_name = name + str(index)
@@ -59,7 +69,12 @@ def increment(name):
       counter = GeneralCounterShard(key_name=shard_name, name=name)
     counter.count += 1
     counter.put()
-  db.run_in_transaction(txn)
+  
+  if _CurrentTransactionKey():
+    txn()
+  else:
+    db.run_in_transaction(txn)
+    
   memcache.incr(name)
 
   
@@ -72,10 +87,14 @@ def increase_shards(name, num):
     num - How many shards to use
     
   """
-  config = GeneralCounterShardConfig.get_or_insert(name, name=name)
+  config = get_config(name)
   def txn():
     if config.num_shards < num:
       config.num_shards = num
-      config.put()    
-  db.run_in_transaction(txn)
+      config.put()
+
+  if _CurrentTransactionKey():
+    txn()
+  else:
+    db.run_in_transaction(txn)
 
