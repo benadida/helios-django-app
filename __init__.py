@@ -7,3 +7,6 @@ ADMIN = None
 
 # allow upload of voters via CSV?
 VOTERS_UPLOAD = True
+
+# allow emailing of voters?
+VOTERS_EMAIL = True

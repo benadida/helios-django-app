@@ -47,7 +47,9 @@
 
 {% else %}
 
+{% if email_voters %}
 <li> <a href="{% url helios.views.voters_email election_id=election.uuid %}">email voters</a></li>
+{% endif %}
 <li> <a href="{% url helios.views.one_election_compute_tally election_id=election.uuid %}">compute tally</a></li>
 
 {% endif %}

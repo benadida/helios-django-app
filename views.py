@@ -141,7 +141,7 @@ def one_election_view(request, election):
     voter = None
     votes = None
     
-  return render_template(request, 'election_view', {'election' : election, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered})
+  return render_template(request, 'election_view', {'election' : election, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'email_voters': helios.VOTERS_EMAIL})
   
 ##
 ## Trustees and Public Key
@@ -533,6 +533,9 @@ def voters_upload(request, election):
 
 @election_admin(frozen=True)
 def voters_email(request, election):
+  if not helios.VOTERS_EMAIL:
+    return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+    
   if request.method == "GET":
     email_form = forms.EmailVotersForm()
   else:
