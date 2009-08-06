@@ -356,7 +356,7 @@ def one_election_register(request, election):
     voter = Voter(uuid= voter_uuid, voter_type = user.user_type, voter_id = user.user_id, election = election)
     
     if election.use_voter_aliases:
-      voter.alias = "V_" + str(election.num_voters)
+      voter.alias = "V" + str(election.num_voters+1)
       
     voter.put()
 
@@ -521,7 +521,7 @@ def voters_upload(request, election):
       voter = Voter(uuid= voter_uuid, voter_type = voter_type, voter_id = voter_id, name = name, election = election)
 
       if election.use_voter_aliases:
-        voter.alias = "V_" + str(election.num_voters)
+        voter.alias = "V" + str(election.num_voters + 1)
 
       voter.put()
     
@@ -549,11 +549,22 @@ def voters_email(request, election):
         
 Election URL:  %s
 Your username: %s
-Your password: %s
+Your password: %s""" % (get_election_url(election), user.user_id, user.info['password'])
+
+        if election.use_voter_aliases:
+          body+= """
+Your voter alias: %s
+
+In order to protect your privacy, this election is configured to never display your username,
+name, or email address to the public. Instead, the bulletin board will only display your alias.
+
+""" % voter.alias
+
+        body += """
 
 --
 Helios
-""" % (get_election_url(election), user.user_id, user.info['password'])
+"""
 
         send_mail(email_form.cleaned_data['subject'], body, settings.SERVER_EMAIL, ["%s <%s>" % (user.info['name'], user.info['email'])], fail_silently=False)
       
