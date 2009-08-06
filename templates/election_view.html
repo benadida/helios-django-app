@@ -67,13 +67,17 @@
 {% if election.frozen_at %}
 
 <div id="election_info">
-<p>Election ID<br />
-<b><tt>{{election.uuid}}</tt></b><br /><br />
+<!--<p>Election ID<br />
+<b><tt>{{election.uuid}}</tt></b><br /><br />-->
 
 Election Fingerprint<br />
 <b><tt>{{election.hash}}</tt></b></p>
 </div>
 {% endif %}
+
+<p style="font-size:1.1em;">
+  {{election.description}}
+</p>
 
 {% if user %}
 {% if voter %}

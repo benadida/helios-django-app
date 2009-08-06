@@ -2,7 +2,11 @@
 {% block content %}
   <h2 class="title">{{election.name}} &mdash; Bulletin Board <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election_id=election.uuid %}">done</a>]</span></h2>
 
-<h3>Search</h3>
+<p>
+  This is the election bulletin board, which displays the fingerprints of all cast votes in this election.
+  </p>
+<!--
+  <h3>Search</h3>
 <form method="get" action="">
     Voter
 {% if election.use_voter_aliases %}
@@ -15,7 +19,10 @@ Alias
 <b>currently viewing voter {{voter_id}}</b>. [<a href="./bboard">Show All</a>]
 <br /><br />
 {% endif %}
+
 Voters {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
+-->
+
 {% if after %}
 <a href="./bboard">back to start</a> &nbsp;&nbsp;
 {% endif %}

@@ -8,6 +8,7 @@ $(document).ready(function() {
     $('#generator').hide();
     BigInt.setup(function() {
         ELGAMAL_PARAMS = ElGamal.Params.fromJSONObject({{eg_params_json|safe}});
+        $('#waiting_message').hide();
         $('#generator').show();
     });
 });
@@ -53,6 +54,14 @@ $(document).ready(function() {
 </script>
 
 <h2 class="title">Key Generator</h2>
+
+<p>
+  This is a keypair generator for your election.
+</p>
+
+<p id="waiting_message">
+  Please wait for the generator to load...
+</p>
 
 <p id="generator">
 
