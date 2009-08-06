@@ -5,3 +5,5 @@ TEMPLATE_BASE = "helios/templates/base.html"
 ADMIN_ONLY = False
 ADMIN = None
 
+# allow upload of voters via CSV?
+VOTERS_UPLOAD = True

@@ -481,7 +481,7 @@ def voters_manage(request, election):
 
   voters = Voter.get_by_election(election, after=request.GET.get('after', None), limit=limit+1)
   
-  return render_template(request, 'voters_manage', {'election': election, 'voters': voters})
+  return render_template(request, 'voters_manage', {'election': election, 'voters': voters, 'upload_p': helios.VOTERS_UPLOAD})
   
 @election_admin(frozen=False)
 def voters_upload(request, election):

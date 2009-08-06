@@ -15,6 +15,7 @@
 {% endfor %}
 </table>
 
+{% if upload_p %}
 <p>
     Please enter CSV content for your list of voters as follows:
 </p>
@@ -29,5 +30,6 @@
     <textarea name="voters_csv" cols="80" rows="10"></textarea><br /><br />
     <input type="submit" value="go" />
 </form>
+{% endif %}
 
 {% endblock %}
