@@ -495,6 +495,8 @@ def voters_upload(request, election):
     voters_csv_lines = request.POST['voters_csv'].split("\n")
     reader = csv.reader(voters_csv_lines)
 
+    voter_alias = election.num_voters + 1
+    
     for voter in reader:
 
       # bad line
@@ -522,7 +524,8 @@ def voters_upload(request, election):
       voter = Voter(uuid= voter_uuid, voter_type = voter_type, voter_id = voter_id, name = name, election = election)
 
       if election.use_voter_aliases:
-        voter.alias = "V" + str(election.num_voters + 1)
+        voter.alias = "V" + str(voter_alias)
+        voter_alias += 1
 
       voter.put()
     
@@ -546,7 +549,11 @@ def voters_email(request, election):
           continue
         
         user = voter.user
-        body = email_form.cleaned_data['body'] + """
+        body = """
+Dear %s,
+""" % voter.name
+
+        body += email_form.cleaned_data['body'] + """
         
 Election URL:  %s
 Your username: %s

@@ -4,9 +4,9 @@
   <h2 class="title">{{election.name}} &mdash; Manage Voters <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election_id=election.uuid %}">done</a>]</span></h2>
 
 <table class="pretty">
-<tr><th>Alias</th><th>Username</th></tr>
+<tr><th>Alias</th><th>Name</th><th>Username</th></tr>
 {% for voter in voters %}
-<tr><td>{{voter.alias}}</td><td>{{voter.voter_id}}
+<tr><td>{{voter.alias}}</td><td>{{voter.name}}</td><td>{{voter.voter_id}}
 {% if election.frozen_at %}
 {% else %}
 [<a href="{% url helios.views.voter_delete election.uuid, voter.uuid %}">x</a>]
