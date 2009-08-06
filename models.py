@@ -359,6 +359,8 @@ class Trustee(db.Model, electionalgs.Trustee):
   
   uuid = db.StringProperty(multiline=False)
   
+  name = db.StringProperty(multiline=False)
+  
   # public key
   public_key = JSONProperty(algs.EGPublicKey)
   public_key_hash = db.StringProperty(multiline=False)

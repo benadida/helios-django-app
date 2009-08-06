@@ -168,6 +168,7 @@ def new_trustee(request, election):
     public_key_and_proof = utils.from_json(request.POST['public_key_json'])
     public_key = algs.EGPublicKey.fromJSONDict(public_key_and_proof['public_key'])
     pok = algs.DLogProof.fromJSONDict(public_key_and_proof['pok'])
+    name = request.POST['name']
     
     # verify the pok
     if not public_key.verify_sk_proof(pok, algs.DLog_challenge_generator):
@@ -175,7 +176,7 @@ def new_trustee(request, election):
     
     public_key_hash = utils.hash_b64(utils.to_json(public_key.toJSONDict()))
     
-    trustee = Trustee(uuid = str(uuid.uuid1()), public_key = public_key, public_key_hash = public_key_hash, pok = pok, election = election)
+    trustee = Trustee(uuid = str(uuid.uuid1()), public_key = public_key, public_key_hash = public_key_hash, pok = pok, election = election, name=name)
     trustee.put()
     return HttpResponseRedirect(reverse(list_trustees_view, args=[election.uuid]))
     
