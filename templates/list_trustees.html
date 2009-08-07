@@ -1,7 +1,7 @@
 {% extends "helios/templates/cryptobase.html" %}
 
 {% block content %}
-  <h2 class="title">Trustees for Election {{election.name}} <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">done</a>]</span></h2>
+  <h2 class="title">{{election.name}} &mdash; Trustees <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">done</a>]</span></h2>
 
 <p>
   The following trustees manage the decryption process for this election.

@@ -1,5 +1,6 @@
 {% extends TEMPLATE_BASE %}
 
+
 {% if admin_p %}
 {% block admin %}
 {% if election.frozen_at %}
@@ -63,25 +64,28 @@
 
 {% block content %}
   <h2 class="title">{{ election.name }}</h2>
+an election created by {{election.admin.info.name}}
 
-{% if election.frozen_at %}
 
-<div id="election_info">
-<!--<p>Election ID<br />
-<b><tt>{{election.uuid}}</tt></b><br /><br />-->
-
-Election Fingerprint<br />
-<b><tt>{{election.hash}}</tt></b></p>
-</div>
+<div style="border-left: 1px solid #888; padding: 0; padding-left: 10px; margin: 0; margin: 15px; margin-bottom: 25px;">
+<span style="padding:0px; margin:0px; font-size:1.5em; ">
+    {{election.description}}
+</span>
+<p style="padding:0; margin:3px;">
+{% if election.questions %}
+    {{election.questions|length}} question(s)
+{% else %}
+    no questions yet.
 {% endif %}
-
-<p style="font-size:1.1em;">
-  {{election.description}}
+    {% if election.frozen_at %}
+    <br />fingerprint: <b><tt style="font-size: 1.5em;">{{election.hash}}</tt></b>
+    {% endif %}
 </p>
+</div>
 
 {% if user %}
 {% if voter %}
-<p>You ({{user.user_id}}) are registered to vote in this election.
+<p>You are registered to vote in this election.
 {% if election.use_voter_aliases %}
 Your voter alias is {{voter.alias}}.
 {% endif %}
@@ -104,9 +108,9 @@ You ({{user.user_id}}) are <em>not</em> registered to vote in this election.<br 
 
 {% if election.frozen_at %}
 {% if votes %}
-<p>You ({{user.user_id}}) have cast a vote in this election:<br />
+<p>Your last cast ballot:<br />
 <tt style="font-size:14pt; font-weight: bold;">{{votes.0.vote_hash}}</tt><br />
-at {{votes.0.cast_at}}.
+at <span class="date_prettify">{{votes.0.cast_at}}</span>.
 </p>
 {% endif %}
 
@@ -125,7 +129,7 @@ at {{votes.0.cast_at}}.
 {% endif %}
 
 {% else %}
-<p><em>This election is not ready for voting yet.</em><br />
+<p><em>This election is not yet open.</em><br />
 {% endif %}
 
 
@@ -138,7 +142,9 @@ at {{votes.0.cast_at}}.
 {% endif %}
 
 {%if election.result %}
-<h2>Tally</h2>
+
+<hr /><h2>Tally</h2>
+<br />
 {% for question in election.pretty_result %}
 <b>{{question.question}}</b>:
 <ul>

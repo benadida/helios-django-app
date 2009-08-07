@@ -1,7 +1,7 @@
 {% extends "helios/templates/cryptobase.html" %}
 
 {% block content %}
-  <h2 class="title">Election {{election.name}} &mdash; Add a Trustee <span style="font-size:0.7em;">[<a href="{% url helios.views.list_trustees_view election.uuid %}">cancel</a>]</span></h2>
+  <h2 class="title">{{election.name}} &mdash; New Trustee <span style="font-size:0.7em;">[<a href="{% url helios.views.list_trustees_view election.uuid %}">cancel</a>]</span></h2>
   
 <p>
     Ask your trustee to generate a keypair using the <a target="_blank" href="{% url helios.views.election_keygenerator election.uuid %}">election key generator</a>, then to send you the public key.

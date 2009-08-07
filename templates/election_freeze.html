@@ -1,7 +1,7 @@
 {% extends TEMPLATE_BASE %}
 
 {% block content %}
-  <h2 class="title">Freeze Election: {{election.name}}</h2>
+  <h2 class="title">{{election.name}} &mdash; Freeze</h2>
 <p>
 Once frozen, an election's questions can no longer be modified.
 </p>
@@ -14,9 +14,11 @@ Since you have set up your election with <b>closed registration</b>, you will al
 {% endif %}
 </p>    
 
+{% if helios.VOTERS_EMAIL %}
 <p>
 You must freeze an election before you can contact voters.
 </p>
+{% endif %}
 
 {% if issues_p %}
 <p>

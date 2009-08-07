@@ -2,6 +2,16 @@
 {% block title %}Confirm Vote{% endblock %}
 
 {% block content %}
+<script language="javascript">
+$(document).ready(function() {
+  $('#waiting_div').hide();
+});
+
+function show_waiting() {
+  $('#cast_form').hide();
+  $('#waiting_div').show();
+}
+</script>
 <h1>Confirm your Vote</h1>
 
 <h3>Your Ballot</h3>
@@ -29,11 +39,17 @@
 <em>no vote cast yet</em>
 {% endif %}
 <br /><br />
-<form method="post" action="">
+<div id="cast_form">
+<form method="post" action="" onsubmit="show_waiting()">
     <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
     
     <input type="submit" value="cast this ballot" />
 </form>
+</div>
+<div id="waiting_div">
+    Verifying and Casting your ballot<br />
+    <img src="/static/helios/loading.gif" />
+</div>
 {% else %}
 <b>You are <em>not</em> registered for this election.</b><br />
 {% endif %}

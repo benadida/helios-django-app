@@ -104,7 +104,7 @@ def election_new(request):
       # create the election obj
       election_params = dict(election_form.cleaned_data)
       election_params['uuid'] = str(uuid.uuid1())
-      election_params['cast_url'] = reverse(one_election_cast, args=[election_params['uuid']])
+      election_params['cast_url'] = settings.URL_HOST + reverse(one_election_cast, args=[election_params['uuid']])
       
       # registration starts closed
       election_params['openreg'] = False
