@@ -33,10 +33,12 @@
         {% block header %}
         {% endblock %}
         </div>
+{% if admin_p %}
 <div style="float:right; border-left: 1px dashed black; padding: 0px 20px 5px 20px;">
   <h3>Administration</h3>
       {% block admin %}{% endblock %}
 </div>      
+{% endif %}
       {% block content %}{% endblock %}
       <div id="footer">
       </div>

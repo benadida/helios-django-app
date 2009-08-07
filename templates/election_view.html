@@ -64,8 +64,9 @@
 
 {% block content %}
   <h2 class="title">{{ election.name }}</h2>
+{% if election.admin.info.name %}
 an election created by {{election.admin.info.name}}
-
+{% endif %}
 
 <div style="border-left: 1px solid #888; padding: 0; padding-left: 10px; margin: 0; margin: 15px; margin-bottom: 25px;">
 <span style="padding:0px; margin:0px; font-size:1.5em; ">
@@ -78,7 +79,7 @@ an election created by {{election.admin.info.name}}
     no questions yet.
 {% endif %}
     {% if election.frozen_at %}
-    <br />fingerprint: <b><tt style="font-size: 1.5em;">{{election.hash}}</tt></b>
+    <br /><b><tt style="font-size: 1.5em;">{{election.hash}}</tt></b>
     {% endif %}
 </p>
 </div>
@@ -123,7 +124,11 @@ at <span class="date_prettify">{{votes.0.cast_at}}</span>.
 {% endif %}
 
 {% if notregistered %}
-[you are not registered for this election, so you won't be able to cast a vote]
+[you are not registered for this election, so you won't be able to cast a vote]<br />
+{% endif %}
+
+{% if election.encrypted_tally or election.result %}
+[the election has entered the tally process, so you won't be able to cast a vote]<br />
 {% endif %}
 
 {% endif %}
