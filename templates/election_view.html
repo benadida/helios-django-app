@@ -64,8 +64,10 @@
 
 {% block content %}
   <h2 class="title">{{ election.name }}</h2>
-{% if election.admin.info.name %}
-an election created by {{election.admin.info.name}}
+<p style="padding-top:0; margin-top:2px"><tt style="font-size: 1.2em;">{{election.url}}</tt><br />
+  {% if election.admin.info.name %}
+an election created by <u><b>{{election.admin.info.name}}</b></u>
+</p>
 {% endif %}
 
 <div style="border-left: 1px solid #888; padding: 0; padding-left: 10px; margin: 0; margin: 15px; margin-bottom: 25px;">

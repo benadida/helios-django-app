@@ -12,19 +12,19 @@ function show_waiting() {
   $('#waiting_div').show();
 }
 </script>
-<h1>Confirm your Vote</h1>
+<h1>{{election.name}} &mdash; Confirm your Vote</h1>
 
-<h3>Your Ballot</h3>
-
-<p style="font-size:1.6em;">
-    <tt>{{vote_fingerprint}}</tt>
+<p>
+  We have recorded your encrypted ballot:<br />
+    <tt style="font-size:1.8em;">{{vote_fingerprint}}</tt>
 </p>
 
-<h3>Your Identity</h3>
 {% if user %}
-<p style="font-size: 1.4em;">
-    {{user.user_id}} [{{user.user_type}}]<br />
-    (<a href="{% url auth.views.logout %}?return_url={{CURRENT_URL}}">logout</a>)
+<p>
+  You are logged in as: <br/>
+<span style="font-size: 1.4em;">
+    {{user.user_id}}</span><br />
+    (<a href="{% url auth.views.logout %}?return_url={{CURRENT_URL}}">switch user</a>)
 </p>
 
 {% if voter %}

@@ -103,23 +103,28 @@ def election_new(request):
     if election_form.is_valid():
       # create the election obj
       election_params = dict(election_form.cleaned_data)
-      election_params['uuid'] = str(uuid.uuid1())
-      election_params['cast_url'] = settings.URL_HOST + reverse(one_election_cast, args=[election_params['uuid']])
       
-      # registration starts closed
-      election_params['openreg'] = False
+      # is the short name valid
+      if helios_utils.urlencode(election_params['short_name']) == election_params['short_name']:      
+        election_params['uuid'] = str(uuid.uuid1())
+        election_params['cast_url'] = settings.URL_HOST + reverse(one_election_cast, args=[election_params['uuid']])
+      
+        # registration starts closed
+        election_params['openreg'] = False
 
-      user = get_user(request)
-      election_params['admin'] = user
-      # election_params['api_client'] = get_api_client(request)
+        user = get_user(request)
+        election_params['admin'] = user
+        # election_params['api_client'] = get_api_client(request)
 
-      election, created_p = Election.get_or_create(**election_params)
+        election, created_p = Election.get_or_create(**election_params)
       
-      if created_p:
-        counters.increment(GLOBAL_COUNTER_ELECTIONS)
-        return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
-      
-      error = "An election with short name %s already exists" % election_params['short_name']
+        if created_p:
+          counters.increment(GLOBAL_COUNTER_ELECTIONS)
+          return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+        else:
+          error = "An election with short name %s already exists" % election_params['short_name']
+      else:
+        error = "No special characters allowed in the short name."
     
   return render_template(request, "election_new", {'election_form': election_form, 'error': error})
   

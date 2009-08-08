@@ -16,6 +16,8 @@ from google.appengine.api import datastore_types
 
 from crypto import electionalgs, algs, utils
 
+import helios
+
 # counters
 import counters
 
@@ -224,6 +226,10 @@ class Election(db.Model, electionalgs.Election):
     election_popo.toOtherObject(el)
           
     return el
+    
+  @property
+  def url(self):
+    return helios.get_election_url(self)
     
 class Voter(db.Model, electionalgs.Voter):
   election = db.ReferenceProperty(Election)
