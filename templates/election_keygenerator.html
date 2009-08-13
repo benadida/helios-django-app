@@ -38,13 +38,22 @@ function generate_keypair() {
     PUBLIC_KEY = secret_key.pk;
 
     $('#sk_textarea').val(jQuery.toJSON(secret_key));
-    $('#sk_form').show();
-    var pk_val = jQuery.toJSON({'pok': PROOF, 'public_key': PUBLIC_KEY})
+    var pk_val = jQuery.toJSON({'pok': PROOF, 'public_key': PUBLIC_KEY});
     $('#pk_textarea').val(pk_val);
-    $('#pk_hash').show();
     $('#pk_hash').html(b64_sha256(jQuery.toJSON(PUBLIC_KEY)));
-    $('#pk_form').show();
+
     $('#clear_button').show();
+    show_sk();
+}
+
+function show_sk() {
+    $('#sk_form').show();
+}
+
+function show_pk() {
+    $('#sk_form').hide();
+    $('#pk_hash').show();
+    $('#pk_form').show();
 }
 
 $(document).ready(function() {
@@ -53,10 +62,10 @@ $(document).ready(function() {
 
 </script>
 
-<h2 class="title">Key Generator</h2>
+<h2 class="title">{{election.name}} &mdash; Trustee Keypair Generator</h2>
 
 <p>
-  This is a keypair generator for your election.
+  This is a trustee keypair generator for your election.
 </p>
 
 <p id="waiting_message">
@@ -70,19 +79,36 @@ $(document).ready(function() {
 <span id="clear_button"><button onclick="clear_keys(); return false;">Clear Keys</button></span>
 
 <form id="sk_form">
-Your Secret Key:<br />
+<h3>Your Secret Key</h3>
+
+<p>
+    Copy this secret key to a safe place.
+</p>
 <textarea id="sk_textarea" cols="80" rows="10" readonly="readonly">
 </textarea>
+
+<button onclick="show_pk(); return false;">ok, I've copied this to a safe place</button>
 </form>
 
-<br /><br />
-<form id="pk_form">
-Your Public Key and Proof of Knowledge:<br />
-<textarea id="pk_textarea"  cols="80" rows="10">
-</textarea><br /><br />
-<b>Public Key Hash</b>: <tt id="pk_hash" style="font-size: 1.5em;"></tt>
-</form>
+<form method="post" id="pk_form" action="{% url helios.views.new_trustee election.uuid %}">
+<h3>Your Public Key</h3>
+<p>
+    This is the public key that corresponds to the secret key you just copied to a safe place.
 </p>
+<p>
+    The fingerprint of this public key is: <tt id="pk_hash" style="font-size: 1.5em; font-weight: bold;"></tt>
+</p>
+<br />
+<textarea id="pk_textarea" name="public_key_json" cols="80" rows="10">
+</textarea>
+<br />
+{% if is_admin %}
+<h3>Upload this Key</h3>
+Since you are the election administrator, you may want to upload this public key directly.<br />
+Name: <input type="text" name="name" value="{{user.user_id}}" /><br /><br />
+<input type="submit" value="submit">
+{% endif %}
+</form>
 
 <div id="applet_div"></div>
 <br /><br />

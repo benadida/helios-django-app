@@ -1,8 +1,36 @@
 {% extends "helios/templates/cryptobase.html" %}
 
+{% block admin %}
+<p>
+    Typically, you want at least two trustees, so that no single individual can decrypt votes on his/her own. However, if this is a simple election, a single trustee is acceptable.
+</p>
+
+{% if not election.frozen_at %}
+<p>
+    As administrator, you can<br /><a href="{% url helios.views.election_keygenerator election.uuid %}">generate and upload a key in one step</a>.
+</p>
+
+<p>
+    For other trustees, ask them to visit the key generation page:<br /><br />
+    <tt>{{ settings.URL_HOST }}{% url helios.views.election_keygenerator election.uuid %}</tt>.<br /><br />
+    When they send you the public key, you can 
+    <a href="{% url helios.views.new_trustee election.uuid %}">upload it</a> .
+</p>
+{% endif %}
+
+{% endblock %}
+
 {% block content %}
   <h2 class="title">{{election.name}} &mdash; Trustees <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">done</a>]</span></h2>
 
+{% if not trustees|length %}
+<p><em>no trustees yet</em></p>
+
+<p>
+    Trustees are responsible for decrypting the election result.
+</p>
+
+{% else %}
 <p>
   The following trustees manage the decryption process for this election.
 </p>
@@ -27,8 +55,6 @@
 {% endfor %}
 </ul>
 
-{% if not election.frozen_at %}
-<p><a href="{% url helios.views.new_trustee election.uuid %}">add a trustee</a></p>
 {% endif %}
 
 {% endblock %}
