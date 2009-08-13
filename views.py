@@ -456,9 +456,12 @@ def trustee_upload_decryption(request, election, trustee_uuid):
 
   trustee = Trustee.get_by_election_and_uuid(election, trustee_uuid)
 
+  factors_and_proofs = utils.from_json(request.POST['factors_and_proofs'])
+  
   # verify the decryption factors
-  trustee.decryption_factors = utils.from_json(request.POST['decryption_factors'])
-  trustee.decryption_proofs = utils.from_json(request.POST['decryption_proofs'])
+  trustee.decryption_factors = factors_and_proofs['decryption_factors']
+  trustee.decryption_proofs = factors_and_proofs['decryption_proofs']
+  
   if trustee.verify_decryption_proofs():
     trustee.save()
     return SUCCESS
