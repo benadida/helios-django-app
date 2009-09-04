@@ -156,7 +156,9 @@ def one_election_view(request, election):
     voter = None
     votes = None
     
-  return render_template(request, 'election_view', {'election' : election, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'email_voters': helios.VOTERS_EMAIL})
+  trustees = Trustee.get_by_election(election)
+    
+  return render_template(request, 'election_view', {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'email_voters': helios.VOTERS_EMAIL})
   
 ##
 ## Trustees and Public Key

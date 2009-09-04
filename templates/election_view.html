@@ -64,31 +64,51 @@
 
 {% block content %}
   <h2 class="title">{{ election.name }}</h2>
-<p style="padding-top:0; margin-top:2px"><tt style="font-size: 1.2em;">{{election.url}}</tt><br />
+<p style="padding-top:0; margin-top:2px">
   {% if election.admin.info.name %}
 an election created by <u><b>{{election.admin.info.name}}</b></u>
+{% if election.questions %}
+    consisting of {{election.questions|length}} questions.
+{% else %}
+    , no questions yet.
+{% endif %}
+
 </p>
 {% endif %}
 
-<div style="border-left: 1px solid #888; padding: 0; padding-left: 10px; margin: 0; margin: 15px; margin-bottom: 25px;">
+<div style="margin-bottom: 25px;">
 <span style="padding:0px; margin:0px; font-size:1.5em; ">
-    {{election.description}}
+"{{election.description}}"
 </span>
-<p style="padding:0; margin:3px;">
-{% if election.questions %}
-    {{election.questions|length}} question(s)
-{% else %}
-    no questions yet.
-{% endif %}
-    {% if election.frozen_at %}
-    <br /><b><tt style="font-size: 1.5em;">{{election.hash}}</tt></b>
-    {% endif %}
-</p>
 </div>
+
+{% if election.result %}
+<div class="highlight-box">
+    This election is complete. The tally is just below.
+    Check the <a href="#audit">auditing information</a>.
+</div>
+
+<h3>Tally</h3>
+{% for question in election.pretty_result %}
+<b>{{question.question}}</b>:
+<ul>
+{% for answer in question.answers %}
+<li> {{answer.answer}}: {{answer.count}}
+{% endfor %}
+</ul>
+{% endfor %}
+
+{% else %}
+
+{% if election.frozen_at %}
+<span class="highlight-box round" style="font-size: 1.6em; float:left; margin-right: 10px;">
+<a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">Vote in this election </a>
+</span>
+{% endif %}
 
 {% if user %}
 {% if voter %}
-<p>You are registered to vote in this election.
+<p style="padding-top:5px;">You are registered to vote in this election.
 {% if election.use_voter_aliases %}
 Your voter alias is {{voter.alias}}.
 {% endif %}
@@ -109,65 +129,56 @@ You ({{user.user_id}}) are <em>not</em> registered to vote in this election.<br 
 {% else %}
 {% endif %}
 
+{% endif %}
+
+<br clear="left" />
+
+<div style="background: lightyellow; padding:5px; padding-left: 10px; margin-top: 15px; border: 1px solid #aaa; width: 580px;" class="round">
+<div style="float:right; padding: 5px;">
+    <a href="#">What's this?</a>
+</div>
+<h3 id="audit" name="audit">Audit Information</h3>
+<tt style="font-size: 1.5em;">{{election.url}}</tt>
+
 {% if election.frozen_at %}
+<br />Election Fingerprint: <tt style="font-size: 1.3em; font-weight: bold;">{{election.hash}}</tt>
+
+
 {% if votes %}
-<p>Your last cast ballot:<br />
-<tt style="font-size:14pt; font-weight: bold;">{{votes.0.vote_hash}}</tt><br />
-at <span class="date_prettify">{{votes.0.cast_at}}</span>.
+<p>Your last cast ballot at <span class="date_prettify">{{votes.0.cast_at}}</span><br />
+<tt style="font-size:14pt; font-weight: bold;">{{votes.0.vote_hash}}</tt>
 </p>
 {% endif %}
 
-<p ><a style="font-size: 18pt;" href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">Vote in this election</a><br />
-{% if election.result %}
-[the tally has already been computed, but you can view the voting interface anyways]
-{% else %}
-{% if votes %}
-[the new vote will replace the old]
-{% endif %}
+<p style="font-size: 1.3em;">
+<a href="{% url helios.views.one_election_bboard election.uuid %}">all cast votes</a>
+</p>
 
-{% if notregistered %}
-[you are not registered for this election, so you won't be able to cast a vote]<br />
-{% endif %}
-
-{% if election.encrypted_tally or election.result %}
-[the election has entered the tally process, so you won't be able to cast a vote]<br />
-{% endif %}
-
-{% endif %}
-
-{% else %}
-<p><em>This election is not yet open.</em><br />
-{% endif %}
-
-
-{% if election.frozen_at %}
 <p>
-<a href="{% url helios.views.one_election_bboard election.uuid %}" style="font-size:18pt;">Bulletin Board</a>
-|
-<a href="{% url helios.views.list_trustees_view election.uuid %}" style="font-size:18pt;">Trustees</a>
+Trustees: 
+{% for t in trustees %}
+{{t.name}}&nbsp;&nbsp;
+{% endfor %}
+[<a href="{% url helios.views.list_trustees_view election.uuid %}">more info</a>]
 </p>
+    
 {% endif %}
 
-{%if election.result %}
-
-<hr /><h2>Tally</h2>
-<br />
-{% for question in election.pretty_result %}
-<b>{{question.question}}</b>:
-<ul>
-{% for answer in question.answers %}
-<li> {{answer.answer}}: {{answer.count}}
-{% endfor %}
-</ul>
-{% endfor %}
-
+{% if election.result %}
+<p style="font-size: 1.2em;">
 {% ifequal election.tally_type "homomorphic" %}
-<a style="font-size: 14pt;" target="_blank" href="/verifier/verify.html?election_url={% url helios.views.one_election election.uuid %}">Audit the Election Tally</a><br />
+perform <a target="_blank" href="/verifier/verify.html?election_url={% url helios.views.one_election election.uuid %}">election tally</a>.
 {% else %}
 <b>This election uses a custom tallying mechanism, which must be audited by the custom code.</b>
 {% endifequal %}
 
-<br /><br />
+review the <a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">voting booth</a>.
+</p>
+
 {% endif %}
+</div>
+
+
+
 
 {% endblock %}
