@@ -23,6 +23,7 @@ from security import *
 from auth.security import get_user
 
 import uuid, datetime
+import counters
 
 from models import *
 
@@ -54,7 +55,7 @@ def home(request):
     elections = Election.get_by_user_as_admin(user)
   else:
     elections = []
-    
+  
   return render_template(request, "index", {'elections' : elections})
   
 def learn(request):
