@@ -14,6 +14,8 @@ from auth.security import get_user
 
 import helios
 
+from django.conf import settings
+
 ##
 ## BASICS
 ##
@@ -37,6 +39,7 @@ def render_template(request, template_name, vars = {}):
     vars_with_user['csrf_token'] = request.session['csrf_token']
     
   vars_with_user['utils'] = utils
+  vars_with_user['settings'] = settings
   vars_with_user['HELIOS_STATIC'] = '/static/helios/helios'
   vars_with_user['TEMPLATE_BASE'] = helios.TEMPLATE_BASE
   vars_with_user['CURRENT_URL'] = request.path

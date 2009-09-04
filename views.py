@@ -87,7 +87,10 @@ def election_keygenerator(request, election):
   A key generator with the current params, like the trustee home but without a specific election.
   """
   eg_params_json = utils.to_json(ELGAMAL_PARAMS.toJSONDict())
-  return render_template(request, "election_keygenerator", {'eg_params_json': eg_params_json})
+  user = get_user(request)
+  is_admin = user and (user == election.admin)
+  
+  return render_template(request, "election_keygenerator", {'eg_params_json': eg_params_json, 'election': election, 'is_admin': is_admin})
 
 @login_required
 def election_new(request):
@@ -154,7 +157,9 @@ def one_election_view(request, election):
     voter = None
     votes = None
     
-  return render_template(request, 'election_view', {'election' : election, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'email_voters': helios.VOTERS_EMAIL})
+  trustees = Trustee.get_by_election(election)
+    
+  return render_template(request, 'election_view', {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'email_voters': helios.VOTERS_EMAIL})
   
 ##
 ## Trustees and Public Key
@@ -170,7 +175,10 @@ def list_trustees(request, election):
 @election_view()
 def list_trustees_view(request, election):
   trustees = Trustee.get_by_election(election)
-  return render_template(request, 'list_trustees', {'election': election, 'trustees': trustees})
+  user = get_user(request)
+  admin_p = user and (user == election.admin)
+  
+  return render_template(request, 'list_trustees', {'election': election, 'trustees': trustees, 'admin_p':admin_p})
   
 @election_admin(frozen=False)
 def new_trustee(request, election):
@@ -451,9 +459,12 @@ def trustee_upload_decryption(request, election, trustee_uuid):
 
   trustee = Trustee.get_by_election_and_uuid(election, trustee_uuid)
 
+  factors_and_proofs = utils.from_json(request.POST['factors_and_proofs'])
+  
   # verify the decryption factors
-  trustee.decryption_factors = utils.from_json(request.POST['decryption_factors'])
-  trustee.decryption_proofs = utils.from_json(request.POST['decryption_proofs'])
+  trustee.decryption_factors = factors_and_proofs['decryption_factors']
+  trustee.decryption_proofs = factors_and_proofs['decryption_proofs']
+  
   if trustee.verify_decryption_proofs():
     trustee.save()
     return SUCCESS

@@ -4,6 +4,12 @@
 <script language="javascript">
 
 $(document).ready(function() {
+    $('#result_div').hide();
+    $('#waiting_div').hide();
+    $('#waiting_submit_div').hide();
+    $('#done_div').hide();
+    $('#error_div').hide();
+    
     BigInt.setup(function() {
         ELECTION_PK = ElGamal.PublicKey.fromJSONObject({{election.public_key.toJSON|safe}});
         TALLY = HELIOS.Tally.fromJSONObject({{election.encrypted_tally.toJSON|safe}}, ELECTION_PK);   
@@ -51,6 +57,9 @@ function get_secret_key() {
 }
 
 function do_tally() {
+  $('#sk_section').hide();
+  $('#waiting_div').show();
+  
   var secret_key = get_secret_key();
   
   var factors_and_proof = decrypt_and_prove_tally(TALLY, ELECTION_PK, secret_key);
@@ -63,13 +72,39 @@ function do_tally() {
       });
   });
   
+  var factors_and_proofs = {'decryption_factors': factors, 'decryption_proofs': decryption_proofs};
+  var factors_and_proofs_json = $.toJSON(factors_and_proofs);
+  
+  // clear stuff
+  secret_key = null;
+  $('#sk_textarea').val("");
+  
+  // display the result in a text area.
+  $('#waiting_div').hide();
+  
+  $('#result_textarea').html(factors_and_proofs_json);
+  $('#result_div').show();
+}
+
+function submit_result() {
+  $('#result_div').hide();
+  $('#waiting_submit_div').show();
+
+  var result = $('#result_textarea').val();
+  
   // do the post
-  $.post("./upload-decryption", {
-      'decryption_factors': $.toJSON(factors),
-      'decryption_proofs': $.toJSON(decryption_proofs)
-  }, function(result) {
-      alert('partial decryption uploaded!');
-      document.location = '../../view';
+  $.ajax({
+      type: 'POST',
+      url: "./upload-decryption",
+      data: {'factors_and_proofs': result},
+      success: function(result) {
+          $('#waiting_submit_div').hide();
+          $('#done_div').show();
+      },
+      error: function(error) {
+          $('#waiting_submit_div').hide();
+          $('#error_div').show();
+      }
   });
 }
 
@@ -95,6 +130,37 @@ function do_tally() {
       <p id="tally_section">
           <button onclick="do_tally();">Tally!</button>
       </p>
+  </div>
+  
+  <div id="waiting_div">
+      Generating partial decryption factors and proofs...<br />
+      <img src="/static/helios/loading.gif" />
+  </div>
+
+  <div id="waiting_submit_div">
+      Submitting and checking your decryption factors and proofs...<br />
+      <img src="/static/helios/loading.gif" />
+  </div>
+  
+  <div id="result_div">
+      <h3>Result</h3>
+      <p>
+          Your partial decryption factors and proofs have been generated below.<br />
+          Your secret key has been cleared from memory.<br />
+          When you're ready, you can submit this result to the server.
+      </p>
+      <form action="javascript:submit_result();">
+          <textarea id="result_textarea" cols="60" rows="5" wrap="soft"></textarea><br />
+          <input type="submit" value="submit" />
+      </form>
+  </div>
+  
+  <div id="done_div">
+      Done! <a href="{% url helios.views.one_election_view election.uuid %}">Back to election</a>
+  </div>
+  
+  <div id="error_div">
+      Error: your secret key was likely incorrect.
   </div>
 
   <div id="applet_div">
