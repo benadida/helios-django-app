@@ -43,7 +43,8 @@ function show_waiting() {
 <form method="post" action="" onsubmit="show_waiting()">
     <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
     
-    <input type="submit" value="cast this ballot" />
+    <input type="submit" value="cast this ballot" style="font-size: 1.5em;" /><br />
+    <span style="font-size:0.8em;"><br />You can cast as many ballots as you want,<br />only the last one counts.</span>
 </form>
 </div>
 <div id="waiting_div">
