@@ -214,7 +214,7 @@ def one_election_cast(request, election):
   encrypted_vote = request.POST['encrypted_vote']
   request.session['encrypted_vote'] = encrypted_vote
   return HttpResponseRedirect(reverse(one_election_cast_confirm, args=[election.uuid]))
-
+  
 @election_view(frozen=True)
 def one_election_cast_confirm(request, election):
   user = get_user(request)    
@@ -223,6 +223,10 @@ def one_election_cast_confirm(request, election):
     voter = Voter.get_by_election_and_user(election, user)
   else:
     voter = None
+  
+  # auto-register this person if the election is openreg
+  if user and not voter and election.openreg:
+    voter = _register_voter(election, user)
     
   # tallied election, no vote casting
   if election.encrypted_tally or election.result:
@@ -241,7 +245,7 @@ def one_election_cast_confirm(request, election):
       'cast_at': datetime.datetime.utcnow(),
       'election': election
     }
-    
+
     cast_vote = CastVote(**cast_vote_params)
   else:
     cast_vote = None
@@ -265,11 +269,11 @@ def one_election_cast_confirm(request, election):
   if request.method == "POST":
     check_csrf(request)
     
-    # if user is not logged in or user is not a voter
+    # if user is not logged in
     # bring back to the confirmation page to let him know
-    if not (user!=None and voter!=None):
+    if not user or not voter:
       return HttpResponseRedirect(reverse(one_election_cast_confirm, args=[election.uuid]))
-    
+            
     # verify the vote
     if cast_vote.vote.verify(election):
       # store it
@@ -362,7 +366,17 @@ def one_election_build(request, election):
   questions_json = utils.to_json(election.questions)
   
   return render_template(request, 'election_build', {'election': election, 'questions_json' : questions_json})
+
+def _register_voter(election, user):
+  voter_uuid = str(uuid.uuid1())
+  voter = Voter(uuid= voter_uuid, voter_type = user.user_type, voter_id = user.user_id, election = election)
   
+  if election.use_voter_aliases:
+    voter.alias = "V" + str(election.num_voters+1)
+    
+  voter.put()
+  return voter
+    
 @election_view()
 def one_election_register(request, election):
   if not election.openreg:
@@ -374,14 +388,8 @@ def one_election_register(request, election):
   voter = Voter.get_by_election_and_user(election, user)
   
   if not voter:
-    voter_uuid = str(uuid.uuid1())
-    voter = Voter(uuid= voter_uuid, voter_type = user.user_type, voter_id = user.user_id, election = election)
+    voter = _register_voter(election, user)
     
-    if election.use_voter_aliases:
-      voter.alias = "V" + str(election.num_voters+1)
-      
-    voter.put()
-
   return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
 
 @election_admin(frozen=False)
