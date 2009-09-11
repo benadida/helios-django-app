@@ -80,6 +80,8 @@ an election created by <u><b>{{election.admin.info.name}}</b></u>
 <span style="padding:0px; margin:0px; font-size:1.5em; ">
 "{{election.description}}"
 </span>
+<br />
+{{election.questions|length}} question(s).
 </div>
 
 {% if election.result %}
@@ -101,9 +103,9 @@ an election created by <u><b>{{election.admin.info.name}}</b></u>
 {% else %}
 
 {% if election.frozen_at %}
-<span class="highlight-box round" style="font-size: 1.6em; float:left; margin-right: 10px;">
+<span class="highlight-box round" style="font-size: 1.6em; margin-right: 10px;">
 <a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">Vote in this election </a>
-</span>
+</span><br /><br />
 {% endif %}
 
 {% if user %}
@@ -115,7 +117,7 @@ Your voter alias is {{voter.alias}}.
 </p>
 
 {% else %}
-You ({{user.user_id}}) are <em>not</em> registered to vote in this election.<br />
+You ({{user.user_id}}) are <em>not</em> registered<br /> to vote in this election.<br />
 {% if election.result %}
 {% else %}
 {% if election.openreg %}
@@ -127,20 +129,23 @@ You ({{user.user_id}}) are <em>not</em> registered to vote in this election.<br 
 {% endif %}
 {% endif %}
 {% else %}
+
+For your privacy, you'll be asked to log in only once your ballot is encrypted.
 {% endif %}
 
 {% endif %}
 
 <br clear="left" />
 
-<div style="background: lightyellow; padding:5px; padding-left: 10px; margin-top: 15px; border: 1px solid #aaa; width: 580px;" class="round">
+<div style="background: lightyellow; padding:5px; padding-left: 10px; margin-top: 15px; border: 1px solid #aaa; width: 780px;" class="round">
 <div style="float:right; padding: 5px;">
     <a href="#">What's this?</a>
 </div>
 <h3 id="audit" name="audit">Audit Information</h3>
-<tt style="font-size: 1.5em;">{{election.url}}</tt>
+<tt style="font-size: 1.2em;">{{election.url}}</tt>
 
 {% if election.frozen_at %}
+<br />
 <br />Election Fingerprint: <tt style="font-size: 1.3em; font-weight: bold;">{{election.hash}}</tt>
 
 
