@@ -52,7 +52,11 @@ function show_waiting() {
     <img src="/static/helios/loading.gif" />
 </div>
 {% else %}
-<b>You are <em>not</em> registered for this election.</b><br />
+{% if election.openreg %}
+<b>You are <em>not eligible</em> for this election.</b><br />
+{% else %}
+<b>You are <em>not registered</em> for this election and registration is closed.</b><br />
+{% endif %}
 {% endif %}
 
 {% else %}

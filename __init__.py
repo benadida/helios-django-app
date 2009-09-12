@@ -11,6 +11,9 @@ VOTERS_UPLOAD = True
 # allow emailing of voters?
 VOTERS_EMAIL = True
 
+# a function that 
+CHECK_ELIGIBILITY_FUNC = None
+
 from django.conf import settings
 from django.core.urlresolvers import reverse
 

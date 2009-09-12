@@ -151,6 +151,7 @@ def one_election_view(request, election):
       # cast any votes?
       votes = CastVote.get_by_election_and_voter(election, voter)
     else:
+      eligible_p = _check_eligibility(election, user)
       votes = None
       notregistered = True
   else:
@@ -159,7 +160,7 @@ def one_election_view(request, election):
     
   trustees = Trustee.get_by_election(election)
     
-  return render_template(request, 'election_view', {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'email_voters': helios.VOTERS_EMAIL})
+  return render_template(request, 'election_view', {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'email_voters': helios.VOTERS_EMAIL, 'eligible_p': eligible_p})
   
 ##
 ## Trustees and Public Key
@@ -367,7 +368,17 @@ def one_election_build(request, election):
   
   return render_template(request, 'election_build', {'election': election, 'questions_json' : questions_json})
 
+def _check_eligibility(election, user):
+  # is there an eligibility requirement?
+  if hasattr(helios, 'CHECK_ELIGIBILITY_FUNC') and helios.CHECK_ELIGIBILITY_FUNC:
+    return helios.CHECK_ELIGIBILITY_FUNC(election, user)
+  else:
+    return True
+
 def _register_voter(election, user):
+  if not _check_eligibility(election, user):
+    return None
+    
   voter_uuid = str(uuid.uuid1())
   voter = Voter(uuid= voter_uuid, voter_type = user.user_type, voter_id = user.user_id, election = election)
   

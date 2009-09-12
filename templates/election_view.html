@@ -121,10 +121,14 @@ You ({{user.user_id}}) are <em>not</em> registered<br /> to vote in this electio
 {% if election.result %}
 {% else %}
 {% if election.openreg %}
+{% if eligible_p %}
 <form method="post" action="{% url helios.views.one_election_register election.uuid %}">
 <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
 <input type="submit" value="register!" />
 </form>
+{% else %}
+You are not eligible for this election.
+{% endif %}
 {% endif %}
 {% endif %}
 {% endif %}
