@@ -81,7 +81,7 @@ an election created by <u><b>{{election.admin.info.name}}</b></u>
 "{{election.description}}"
 </span>
 <br />
-{{election.questions|length}} question(s).
+{% if election.questions %}{{election.questions|length}}{% else %}0{% endif %} question(s).
 </div>
 
 {% if election.result %}

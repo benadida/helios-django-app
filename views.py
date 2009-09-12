@@ -144,6 +144,8 @@ def one_election_view(request, election):
   
   notregistered = False
   
+  eligible_p = True
+  
   if user:
     voter = Voter.get_by_election_and_user(election, user)
     
@@ -219,6 +221,10 @@ def one_election_cast(request, election):
 @election_view(frozen=True)
 def one_election_cast_confirm(request, election):
   user = get_user(request)    
+
+  # if no encrypted vote, the user is reloading this page or otherwise getting here in a bad way
+  if not request.session.has_key('encrypted_vote'):
+    return HttpResponseRedirect("/")
 
   if user:
     voter = Voter.get_by_election_and_user(election, user)
