@@ -11,7 +11,7 @@
 <ul>
 <li> Registration 
 <b>{{ election.registration_status_pretty }}</b>
-{% if not election.frozen_at %}
+{% if not election.frozen_at %}<br />
 {% if election.openreg %}
 [<a href="{% url helios.views.one_election_set_reg election.uuid %}?open_p=0">turn off</a>]
 {% else %}
@@ -141,11 +141,9 @@ For your privacy, you'll be asked to log in only once your ballot is encrypted.
 
 <br clear="left" />
 
-<div style="background: lightyellow; padding:5px; padding-left: 10px; margin-top: 15px; border: 1px solid #aaa; width: 780px;" class="round">
-<div style="float:right; padding: 5px;">
-    <a href="#">What's this?</a>
-</div>
-<h3 id="audit" name="audit">Audit Information</h3>
+<div style="background: lightyellow; padding:5px; padding-left: 10px; margin-top: 15px; border: 1px solid #aaa; width: 720px;" class="round">
+<a href="#" onclick="$('#auditbody').slideToggle(250);">Audit Info</a>
+<div id="auditbody" style="display:none;">
 <tt style="font-size: 1.2em;">{{election.url}}</tt>
 
 {% if election.frozen_at %}
@@ -185,6 +183,7 @@ review the <a href="/booth/vote.html?election_url={% url helios.views.one_electi
 </p>
 
 {% endif %}
+</div>
 </div>
 
 
