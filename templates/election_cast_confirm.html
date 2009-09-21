@@ -12,7 +12,15 @@ function show_waiting() {
   $('#waiting_div').show();
 }
 </script>
-<h1>{{election.name}} &mdash; Confirm your Vote</h1>
+<h1>{{election.name}} &mdash; Submit your Vote</h1>
+
+<p>
+    <b><em>HOLD ON!</em></b> You're not quite done yet.
+</p>
+
+<p>
+    Now that your ballot is encrypted, you need to log in so we can ensure you are eligible for this election.
+</p>
 
 <p>
   We have recorded your encrypted ballot with tracking number:<br /><br />
@@ -46,17 +54,27 @@ function show_waiting() {
     <input type="submit" value="cast this ballot" style="font-size: 1.5em;" /><br />
     <span style="font-size:0.8em;"><br />You can cast as many ballots as you want,<br />only the last one counts.</span>
 </form>
+
+<p>
+    [<a href="{% url helios.views.one_election_view election.uuid %}">cancel</a>]
+</p>
+
 </div>
 <div id="waiting_div">
     Verifying and Casting your ballot<br />
     <img src="/static/helios/loading.gif" />
 </div>
 {% else %}
+<p>
 {% if election.openreg %}
-<b>You are <em>not eligible</em> for this election.</b><br />
+<b>Sorry, you are <em><u>not eligible</u></em> for this election.</b><br />
 {% else %}
-<b>You are <em>not registered</em> for this election and registration is closed.</b><br />
+<b>Sorry, you are <em>not registered</em> for this election, and registration is closed.</b><br />
 {% endif %}
+</p>
+<p>
+    [<a href="{% url helios.views.one_election_view election.uuid %}">return to the main election page</a>]
+</p>
 {% endif %}
 
 {% else %}

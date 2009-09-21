@@ -117,17 +117,23 @@ Your voter alias is {{voter.alias}}.
 </p>
 
 {% else %}
-You ({{user.user_id}}) are <em>not</em> registered<br /> to vote in this election.<br />
 {% if election.result %}
 {% else %}
 {% if election.openreg %}
 {% if eligible_p %}
+You are <em>not</em> registered to vote in this election.<br />
 <form method="post" action="{% url helios.views.one_election_register election.uuid %}">
 <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
 <input type="submit" value="register!" />
 </form>
 {% else %}
 You are not eligible for this election.
+{% endif %}
+{% else %}
+{% if eligible_p %}
+You are <em>not registered</em> to vote in this election, and registration is closed.<br />
+{% else %}
+You are <em>not eligible</em> to vote in this election.<br />
 {% endif %}
 {% endif %}
 {% endif %}
@@ -144,11 +150,13 @@ For your privacy, you'll be asked to log in only once your ballot is encrypted.
 <div style="background: lightyellow; padding:5px; padding-left: 10px; margin-top: 15px; border: 1px solid #aaa; width: 720px;" class="round">
 <a href="#" onclick="$('#auditbody').slideToggle(250);">Audit Info</a>
 <div id="auditbody" style="display:none;">
-<tt style="font-size: 1.2em;">{{election.url}}</tt>
+<br />Election URL:<br />
+<tt style="font-size: 1.2em;"><a href="{{election.url}}">{{election.url}}</a></tt>
 
 {% if election.frozen_at %}
 <br />
-<br />Election Fingerprint: <tt style="font-size: 1.3em; font-weight: bold;">{{election.hash}}</tt>
+<br />Election Fingerprint:<br />
+<tt style="font-size: 1.3em; font-weight: bold;">{{election.hash}}</tt>
 
 
 {% if votes %}
@@ -158,7 +166,7 @@ For your privacy, you'll be asked to log in only once your ballot is encrypted.
 {% endif %}
 
 <p style="font-size: 1.3em;">
-<a href="{% url helios.views.one_election_bboard election.uuid %}">all cast votes</a>
+<a href="{% url helios.views.one_election_bboard election.uuid %}">Ballot Tracking Center</a>
 </p>
 
 <p>
