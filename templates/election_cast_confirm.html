@@ -23,7 +23,7 @@ function show_waiting() {
 </p>
 
 <p>
-  We have recorded your encrypted ballot with tracking number:<br /><br />
+  We have received your encrypted ballot with tracking number:<br /><br />
     <tt style="font-size:1.8em; font-weight: bold; padding-left: 20px;">  {{vote_fingerprint}}</tt>
 </p>
 
@@ -37,12 +37,14 @@ function show_waiting() {
 
 {% if voter %}
 {% if past_votes %}
+<!--
 <h3>Past Votes Cast for this Election</h3>
 <ul>
 {% for vote in past_votes %}
 <li> <tt>{{vote.vote_hash}}</tt></li>
 {% endfor %}
 </ul>
+-->
 {% else %}
 <em>no vote cast yet</em>
 {% endif %}
@@ -78,8 +80,11 @@ function show_waiting() {
 {% endif %}
 
 {% else %}
-Before we can record this ballot, you need to <a style="font-size: 1.2em; font-weight: bold;" href="{% url auth.views.index %}?return_url={% url helios.views.one_election_cast_confirm election.uuid %}">log in</a>.<br />
-Then we'll check that you're eligible for this election and record your ballot appropriately.<br /><br />
+<br />
+<form method="get" action="{% url auth.views.index %}?return_url={% url helios.views.one_election_cast_confirm election.uuid %}">
+    <input type="submit" class="pretty" style="font-size: 1.6em;" value="Log In" />
+</form>
+<br />
 Don't worry, you can go log in without losing your ballot.
 {% endif %}
 {% endblock %}

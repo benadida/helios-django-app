@@ -1,0 +1,22 @@
+{% extends TEMPLATE_BASE %}
+{% block title %}Confirm Vote{% endblock %}
+
+{% block content %}
+<h1>{{election.name}} &mdash; Vote Successfully Cast!</h1>
+
+<p>
+    Congratulations, your vote has been successfully cast!
+</p>
+
+<p>
+  Your ballot tracking number is:<br /><br />
+    <tt style="font-size:1.8em; font-weight: bold; padding-left: 20px;">  {{last_vote.vote_hash}}</tt>
+</p>
+
+<p>
+<form method="get" action="{% url helios.views.one_election_view election.uuid %}">
+    <input type="submit" value="return to election info" style="font-size: 1.4em;" class="pretty" />
+</form>
+</p>
+
+{% endblock %}

@@ -300,8 +300,16 @@ def one_election_cast_confirm(request, election):
     # send the signal
     signals.vote_cast.send(sender=election, election=election, user=user, cast_vote=cast_vote)
     
-    return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+    return HttpResponseRedirect(reverse(one_election_cast_done, args=[election.uuid]))
   
+@election_view()
+def one_election_cast_done(request, election):
+  user = get_user(request)
+  voter = Voter.get_by_election_and_user(election, user)
+  votes = CastVote.get_by_election_and_voter(election, voter)
+  
+  return render_template(request, 'cast_done', {'election': election, 'last_vote': votes[0]})
+
 @election_view()
 @json
 def one_election_result(request, election):
