@@ -81,7 +81,8 @@ function show_waiting() {
 
 {% else %}
 <br />
-<form method="get" action="{% url auth.views.index %}?return_url={% url helios.views.one_election_cast_confirm election.uuid %}">
+<form method="get" action="{% url auth.views.index %}">
+    <input type="hidden" name="return_url" value="{% url helios.views.one_election_cast_confirm election.uuid %}">
     <input type="submit" class="pretty" style="font-size: 1.6em;" value="Log In" />
 </form>
 <br />
