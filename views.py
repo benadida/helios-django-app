@@ -326,7 +326,7 @@ def one_election_bboard(request, election):
   UI to show election bboard
   """
   after = request.GET.get('after', None)
-  limit = int(request.GET.get('limit', 50))
+  limit = int(request.GET.get('limit', 1000))
 
   # if there's a specific voter
   if request.GET.has_key('q'):
