@@ -263,9 +263,13 @@ class Voter(db.Model, electionalgs.Voter):
     # order by uuid only when no inequality has been added
     if cast == None:
       q.order('uuid')
+      
+      # if we want the list after a certain UUID, add the inequality here
+      if after:
+        q.filter('uuid >', after)
     
     if limit:
-      return [v for v in q.get(limit)]
+      return [v for v in q.fetch(limit)]
     else:
       return [v for v in q]
     
