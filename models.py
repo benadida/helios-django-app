@@ -263,8 +263,11 @@ class Voter(db.Model, electionalgs.Voter):
     # order by uuid only when no inequality has been added
     if cast == None:
       q.order('uuid')
-      
-    return [v for v in q]
+    
+    if limit:
+      return [v for v in q.get(limit)]
+    else:
+      return [v for v in q]
     
   @classmethod
   def get_by_election_and_user(cls, election, user):
