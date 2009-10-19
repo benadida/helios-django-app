@@ -262,11 +262,11 @@ class Voter(db.Model, electionalgs.Voter):
     # little trick to get around GAE limitation
     # order by uuid only when no inequality has been added
     if cast == None:
-      q.order('uuid')
+      q.order('voter_id')
       
       # if we want the list after a certain UUID, add the inequality here
       if after:
-        q.filter('uuid >', after)
+        q.filter('voter_id >', after)
     
     if limit:
       return [v for v in q.fetch(limit)]

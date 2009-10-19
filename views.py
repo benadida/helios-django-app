@@ -326,7 +326,8 @@ def one_election_bboard(request, election):
   UI to show election bboard
   """
   after = request.GET.get('after', None)
-  limit = int(request.GET.get('limit', 1000))
+  offset= int(request.GET.get('offset', 0))
+  limit = int(request.GET.get('limit', 50))
 
   # if there's a specific voter
   if request.GET.has_key('q'):
@@ -334,7 +335,7 @@ def one_election_bboard(request, election):
     voters = []
   else:
     # load a bunch of voters
-    voters = Voter.get_by_election(election, after=request.GET.get('after', None), limit=limit+1)
+    voters = Voter.get_by_election(election, after=after, limit=limit+1)
     
   more_p = len(voters) > limit
   if more_p:
@@ -344,6 +345,7 @@ def one_election_bboard(request, election):
     next_after = None
     
   return render_template(request, 'election_bboard', {'election': election, 'voters': voters, 'next_after': next_after,
+                'offset': offset, 'limit': limit, 'offset_plus_one': offset+1, 'offset_plus_limit': offset+limit,
                 'voter_id': request.GET.get('voter_id', '')})
     
 @election_admin(frozen=False)
