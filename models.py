@@ -154,6 +154,12 @@ class Election(db.Model, electionalgs.Election):
         return True
         
     return False
+  
+  def voting_has_started(self):
+    return self.frozen_at != None and datetime.datetime.utcnow() >= self.voting_starts_at
+    
+  def voting_has_stopped(self):
+    return datetime.datetime.utcnow() >= self.voting_ends_at
     
   def ready_for_decryption_combination(self):
     """
@@ -232,29 +238,7 @@ class Election(db.Model, electionalgs.Election):
     self.public_key = combined_pk
     
     self.save()
-  
-  def update_from_popo(self, el_popo):
-    """
-    update the fields from the POPO
-    """
-    pass
-    # FIXME do this
 
-  def to_popo(self):
-    """
-    convert to a plain old python object
-    """
-    el_popo = electionalgs.Election.fromOtherObject(self)
-      
-    return el_popo
-    
-  @classmethod
-  def from_popo(cls, election_popo, admin, api_client):
-    el = cls(admin=admin, api_client=api_client)
-    election_popo.toOtherObject(el)
-          
-    return el
-    
   @property
   def url(self):
     return helios.get_election_url(self)
@@ -271,7 +255,6 @@ class Voter(db.Model, electionalgs.Voter):
   alias = db.StringProperty(multiline=False)
   
   # we keep a copy here for easy tallying
-  # we name them the same as CastVote for easier popo conversion
   vote = JSONProperty(electionalgs.EncryptedVote)
   vote_hash = db.StringProperty(multiline=False)
   cast_at = db.DateTimeProperty(auto_now_add=False)
@@ -384,9 +367,6 @@ class CastVote(db.Model, electionalgs.CastVote):
 
   cast_at = db.DateTimeProperty(auto_now_add=True)  
   
-  def to_popo(self, election_popo):
-    return electionalgs.CastVote.fromOtherObject(self, election_popo)
-  
   @property
   def voter_uuid(self):
     return self.voter.uuid  
@@ -402,12 +382,6 @@ class CastVote(db.Model, electionalgs.CastVote):
     q.order('-cast_at')
     return [v for v in q]
     
-  @classmethod
-  def from_popo(cls, voter, popo):
-    v = cls(voter = voter)
-    popo.toOtherObject(v)
-    return v
-
 class Trustee(db.Model, electionalgs.Trustee):
   election = db.ReferenceProperty(Election)
   

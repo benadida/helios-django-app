@@ -29,7 +29,7 @@
   }
   
   function question_add(form) {
-      var new_q = {'question' : form.question.value, 'min': parseInt(form.min.value), 'max': parseInt(form.max.value), 'short_name': form.question.value, 'answers': [], 'answer_urls': []};
+      var new_q = {'question' : form.question.value, 'min': parseInt(form.min.value), 'max': parseInt(form.max.value), 'short_name': form.question.value, 'answers': [], 'answer_urls': [], 'choice_type': 'majority', 'tally_type': 'homomorphic'};
       var i = 0;
       while(true) {
           i += 1;

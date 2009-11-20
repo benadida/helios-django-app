@@ -321,7 +321,7 @@ class Election(HeliosObject):
     return Tally(election=self)
         
   def _process_value_in(self, field_name, field_value):
-    if field_name == 'frozen_at':
+    if field_name == 'frozen_at' or field_name == 'voting_starts_at' or field_name == 'voting_ends_at':
       if type(field_value) == str or type(field_value) == unicode:
         return datetime.datetime.strptime(field_value, '%Y-%m-%d %H:%M:%S')
       
@@ -333,7 +333,7 @@ class Election(HeliosObject):
     
   def _process_value_out(self, field_name, field_value):
     # the date
-    if field_name == 'frozen_at':
+    if field_name == 'frozen_at' or field_name == 'voting_starts_at' or field_name == 'voting_ends_at':
       return str(field_value)
 
     if field_name == 'public_key' or field_name == 'private_key':
