@@ -22,7 +22,7 @@ import helios
 import counters
 
 # useful stuff in auth
-from auth.models import JSONProperty, User
+from auth.models import JSONProperty, User, AUTH_SYSTEMS
   
 # global counters
 GLOBAL_COUNTER_VOTERS = 'global_counter_voters'
@@ -50,9 +50,14 @@ class Election(db.Model, electionalgs.Election):
   private_key = JSONProperty(algs.EGSecretKey)
   questions = JSONProperty()
   
+  # eligibility is a JSON field, which lists auth_systems and eligibility details for that auth_system, e.g.
+  # [{'auth_system': 'cas', 'constraint': [{'year': 'u12'}, {'year':'u13'}]}, {'auth_system' : 'password'}, {'auth_system' : 'openid', 'constraint': [{'host':'http://myopenid.com'}]}]
+  eligibility = JSONProperty()
+
   # types of ballot and tally
-  ballot_type = db.StringProperty(multiline=False)
-  tally_type = db.StringProperty(multiline=False)
+  # REMOVED 2009-11-19, we do choice_type and tally_type in the questions now
+  #ballot_type = db.StringProperty(multiline=False)
+  #tally_type = db.StringProperty(multiline=False)
   
   # open registration?
   # this is now used to indicate the state of registration,
@@ -68,6 +73,11 @@ class Election(db.Model, electionalgs.Election):
   # dates at which things happen for the election
   frozen_at = db.DateTimeProperty(auto_now_add=False)
   archived_at = db.DateTimeProperty(auto_now_add=False, default=None)
+  
+  # dates to open up voting
+  # these are always UTC
+  voting_starts_at = db.DateTimeProperty(auto_now_add=False, default=None)
+  voting_ends_at = db.DateTimeProperty(auto_now_add=False, default=None)
 
   # the hash of all voters (stored for large numbers)
   voters_hash = db.StringProperty(multiline=False)
@@ -126,6 +136,24 @@ class Election(db.Model, electionalgs.Election):
     query = cls.all()
     query.filter('short_name = ', short_name)
     return query.fetch(1)[0]
+  
+  def user_eligible_p(self, user):
+    """
+    Checks if a user is eligible for this election.
+    """
+    # registration closed, then eligibility doesn't come into play
+    if not self.openreg:
+      return False
+    
+    if self.eligibility == None:
+      return False
+      
+    # is the user eligible for one of these cases?
+    for eligibility_case in self.eligibility:
+      if user.is_eligible_for(eligibility_case):
+        return True
+        
+    return False
     
   def ready_for_decryption_combination(self):
     """

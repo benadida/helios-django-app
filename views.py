@@ -391,11 +391,7 @@ def one_election_build(request, election):
   return render_template(request, 'election_build', {'election': election, 'questions_json' : questions_json})
 
 def _check_eligibility(election, user):
-  # is there an eligibility requirement?
-  if hasattr(helios, 'CHECK_ELIGIBILITY_FUNC') and helios.CHECK_ELIGIBILITY_FUNC:
-    return helios.CHECK_ELIGIBILITY_FUNC(election, user)
-  else:
-    return True
+  return election.user_eligible_p(user)
 
 def _register_voter(election, user):
   if not _check_eligibility(election, user):

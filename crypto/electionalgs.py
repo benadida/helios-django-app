@@ -312,10 +312,10 @@ class EncryptedVote(HeliosObject):
     
 class Election(HeliosObject):
   
-  FIELDS = ['uuid', 'questions', 'name', 'short_name', 'description', 'voters_hash', 'openreg', 'ballot_type', 'tally_type',
-      'frozen_at', 'public_key', 'private_key', 'cast_url', 'result', 'result_proof', 'use_voter_aliases']
-  JSON_FIELDS = ['uuid', 'questions', 'name', 'short_name', 'description', 'voters_hash', 'openreg', 'ballot_type', 'tally_type',
-      'frozen_at', 'public_key', 'cast_url', 'use_voter_aliases']
+  FIELDS = ['uuid', 'questions', 'name', 'short_name', 'description', 'voters_hash', 'openreg',
+      'frozen_at', 'public_key', 'private_key', 'cast_url', 'result', 'result_proof', 'use_voter_aliases', 'voting_starts_at', 'voting_ends_at']
+  JSON_FIELDS = ['uuid', 'questions', 'name', 'short_name', 'description', 'voters_hash', 'openreg',
+      'frozen_at', 'public_key', 'cast_url', 'use_voter_aliases', 'voting_starts_at', 'voting_ends_at']
 
   def init_tally(self):
     return Tally(election=self)
