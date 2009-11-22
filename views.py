@@ -132,6 +132,31 @@ def election_new(request):
     
   return render_template(request, "election_new", {'election_form': election_form, 'error': error})
   
+@election_admin(frozen=False)
+def one_election_edit(request, election):
+
+  error = None
+  RELEVANT_FIELDS = ['short_name', 'name', 'description', 'use_voter_aliases', 'voting_starts_at', 'voting_ends_at']
+  
+  if request.method == "GET":
+    values = {}
+    for attr_name in RELEVANT_FIELDS:
+      values[attr_name] = getattr(election, attr_name)
+    election_form = forms.ElectionForm(values)
+  else:
+    election_form = forms.ElectionForm(request.POST)
+    
+    if election_form.is_valid():
+      clean_data = election_form.cleaned_data
+      for attr_name in RELEVANT_FIELDS:
+        setattr(election, attr_name, clean_data[attr_name])
+
+      election.save()
+        
+      return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+  
+  return render_template(request, "election_edit", {'election_form' : election_form, 'error': error})
+
 @election_view()
 @json
 def one_election(request, election):

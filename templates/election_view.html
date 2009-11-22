@@ -3,12 +3,23 @@
 
 {% if admin_p %}
 {% block admin %}
-{% if election.frozen_at %}
+
+<b><em>{% if election.voting_has_started %}
+{% if election.voting_has_stopped %}
+voting has stopped
 {% else %}
-<b>Election under Construction</b>
+voting has started
 {% endif %}
+{% else %}
+voting has not yet started
+{% endif %}</em></b>
+
 
 <ul>
+{% if election.voting_has_started %}
+{% else %}
+<li> <a href="edit">election parameters</a></li>
+{% endif %}
 <li> Registration 
 <b>{{ election.registration_status_pretty }}</b>
 {% if not election.frozen_at %}<br />

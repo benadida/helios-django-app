@@ -10,6 +10,9 @@ from helios.views import *
 
 urlpatterns = patterns('',
     (r'^$', one_election),
+    
+    # edit election params
+    (r'^/edit$', one_election_edit),
 
     # adding trustees
     (r'^/trustees/$', list_trustees),
