@@ -1,6 +1,6 @@
 
 {#foreach $T.questions as question}
-<h4>[<a href="javascript:question_remove({$T.question$index})">x</a>] {$T.question$index + 1}. {$T.question.question} (select between {$T.question.min} and {$T.question.max} answers)</h4>
+<h4>[<a href="javascript:question_remove({$T.question$index})">x</a>] {$T.question$index + 1}. {$T.question.question} ({$T.question.choice_type}, select between {$T.question.min} and {#if $T.question.max != null}{$T.question.max}{#else}unlimited{#/if} answers)</h4>
 <ul>
 {#foreach $T.question.answers as answer}
 <li> {$T.answer}</li>
@@ -13,7 +13,11 @@ no questions yet
 <h4>Add a Question:</h4>
 <form id="question_form" onsubmit="question_add(this); return false;" action="#">
 <p>
-    Select between &nbsp;&nbsp;
+  Type of Question:
+  <select name="choice_type">
+    <option selected>approval</option>
+  </select>
+&nbsp;&nbsp;&nbsp;Select between &nbsp;&nbsp;
 <select name="min">
     <option selected>0</option>
     <option>1</option>
@@ -32,6 +36,7 @@ no questions yet
     <option>3</option>
     <option>4</option>
     <option>5</option>
+    <option value="">- (approval)</option>
 </select>
 
 &nbsp;&nbsp;
