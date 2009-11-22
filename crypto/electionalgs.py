@@ -153,21 +153,32 @@ class EncryptedAnswer(object):
       if not choice.verify_disjunctive_encryption_proof(possible_plaintexts, individual_proof, algs.EG_disjunctive_challenge_generator):
         return False
 
-      # compute homomorphic sum
-      homomorphic_sum = choice * homomorphic_sum
+      # compute homomorphic sum if needed
+      if max != None:
+        homomorphic_sum = choice * homomorphic_sum
     
-    # determine possible plaintexts for the sum
-    sum_possible_plaintexts = self.generate_plaintexts(pk, min=min, max=max)
+    if max != None:
+      # determine possible plaintexts for the sum
+      sum_possible_plaintexts = self.generate_plaintexts(pk, min=min, max=max)
 
-    # verify the sum
-    return homomorphic_sum.verify_disjunctive_encryption_proof(sum_possible_plaintexts, self.overall_proof, algs.EG_disjunctive_challenge_generator)
+      # verify the sum
+      return homomorphic_sum.verify_disjunctive_encryption_proof(sum_possible_plaintexts, self.overall_proof, algs.EG_disjunctive_challenge_generator)
+    else:
+      # approval voting, no need for overall proof verification
+      return True
         
   def toJSONDict(self):
-    return {
+    value = {
       'choices': [c.to_dict() for c in self.choices],
-      'individual_proofs' : [p.to_dict() for p in self.individual_proofs],
-      'overall_proof': self.overall_proof.to_dict()
+      'individual_proofs' : [p.to_dict() for p in self.individual_proofs]
     }
+    
+    if self.overall_proof:
+      value['overall_proof'] = self.overall_proof.to_dict()
+    else:
+      value['overall_proof'] = None
+    
+    return value
     
   @classmethod
   def fromJSONDict(cls, d, pk=None):
@@ -175,7 +186,11 @@ class EncryptedAnswer(object):
 
     ea.choices = [algs.EGCiphertext.from_dict(c, pk) for c in d['choices']]
     ea.individual_proofs = [algs.EGZKDisjunctiveProof.from_dict(p) for p in d['individual_proofs']]
-    ea.overall_proof = algs.EGZKDisjunctiveProof.from_dict(d['overall_proof'])
+    
+    if d['overall_proof']:
+      ea.overall_proof = algs.EGZKDisjunctiveProof.from_dict(d['overall_proof'])
+    else:
+      ea.overall_proof = None
 
     if d.has_key('randomness'):
       ea.randomness = [int(r) for r in d['randomness']]
@@ -209,7 +224,13 @@ class EncryptedAnswer(object):
     # homomorphic sum of all
     homomorphic_sum = 0
     randomness_sum = 0
-    
+
+    # min and max for number of answers, useful later
+    min_answers = 0
+    if question.has_key('min'):
+      min_answers = question['min']
+    max_answers = question['max']
+
     # go through each possible answer and encrypt either a g^0 or a g^1.
     for answer_num in range(len(answers)):
       plaintext_index = 0
@@ -227,24 +248,25 @@ class EncryptedAnswer(object):
       individual_proofs[answer_num] = choices[answer_num].generate_disjunctive_encryption_proof(plaintexts, plaintext_index, 
                                                 randomness[answer_num], algs.EG_disjunctive_challenge_generator)
                                                 
-      # sum things up homomorphically
-      homomorphic_sum = choices[answer_num] * homomorphic_sum
-      randomness_sum = (randomness_sum + randomness[answer_num]) % pk.q
+      # sum things up homomorphically if needed
+      if max_answers != None:
+        homomorphic_sum = choices[answer_num] * homomorphic_sum
+        randomness_sum = (randomness_sum + randomness[answer_num]) % pk.q
 
     # prove that the sum is 0 or 1 (can be "blank vote" for this answer)
     # num_selected_answers is 0 or 1, which is the index into the plaintext that is actually encoded
-    min_answers = 0
-    if question.has_key('min'):
-      min_answers = question['min']
-    max_answers = question['max']
     
     if num_selected_answers < min_answers:
       raise Exception("Need to select at least %s answer(s)" % min_answers)
     
-    sum_plaintexts = cls.generate_plaintexts(pk, min=min_answers, max=max_answers)
+    if max_answers != None:
+      sum_plaintexts = cls.generate_plaintexts(pk, min=min_answers, max=max_answers)
     
-    # need to subtract the min from the offset
-    overall_proof = homomorphic_sum.generate_disjunctive_encryption_proof(sum_plaintexts, num_selected_answers - min_answers, randomness_sum, algs.EG_disjunctive_challenge_generator);
+      # need to subtract the min from the offset
+      overall_proof = homomorphic_sum.generate_disjunctive_encryption_proof(sum_plaintexts, num_selected_answers - min_answers, randomness_sum, algs.EG_disjunctive_challenge_generator);
+    else:
+      # approval voting
+      overall_proof = None
     
     return cls(choices, individual_proofs, overall_proof, randomness)
     
