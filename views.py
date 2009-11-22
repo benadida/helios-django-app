@@ -353,6 +353,12 @@ def one_election_bboard(request, election):
   after = request.GET.get('after', None)
   offset= int(request.GET.get('offset', 0))
   limit = int(request.GET.get('limit', 50))
+  
+  order_by = 'voter_id'
+  
+  # unless it's by alias, in which case we better go by UUID
+  if election.use_voter_aliases:
+    order_by = 'uuid'
 
   # if there's a specific voter
   if request.GET.has_key('q'):
@@ -365,7 +371,7 @@ def one_election_bboard(request, election):
   more_p = len(voters) > limit
   if more_p:
     voters = voters[0:limit]
-    next_after = voters[limit-1].voter_id
+    next_after = getattr(voters[limit-1], order_by)
   else:
     next_after = None
     
@@ -479,9 +485,15 @@ def one_election_freeze(request, election):
     else:
       return SUCCESS    
 
+def _check_election_tally_type(election):
+  for q in election.questions:
+    if q['tally_type'] != "homomorphic":
+      return False
+  return True
+
 @election_admin(frozen=True)
 def one_election_compute_tally(request, election):
-  if election.tally_type != "homomorphic":
+  if not _check_election_tally_type(election):
     return HttpResponseRedirect(reverse(one_election_view,args=[election.election_id]))
 
   if request.method == "GET":
@@ -507,7 +519,7 @@ def one_election_compute_tally(request, election):
 
 @election_view()
 def trustee_decrypt_and_prove(request, election, trustee_uuid):
-  if election.tally_type != "homomorphic" or election.encrypted_tally == None:
+  if not _check_election_tally_type(election) or election.encrypted_tally == None:
     return HttpResponseRedirect(reverse(one_election_view,args=[election.election_id]))
     
   trustee = Trustee.get_by_election_and_uuid(election, trustee_uuid)
@@ -516,7 +528,7 @@ def trustee_decrypt_and_prove(request, election, trustee_uuid):
   
 @election_view(frozen=True)
 def trustee_upload_decryption(request, election, trustee_uuid):
-  if election.tally_type != "homomorphic" or election.encrypted_tally == None:
+  if not _check_election_tally_type(election) or election.encrypted_tally == None:
     return HttpResponseRedirect(reverse(one_election_view,args=[election.election_id]))
 
   trustee = Trustee.get_by_election_and_uuid(election, trustee_uuid)
@@ -663,7 +675,7 @@ name, or email address to the public. Instead, the bulletin board will only disp
 Helios
 """
 
-        send_mail(email_form.cleaned_data['subject'], body, settings.SERVER_EMAIL, ["%s <%s>" % (user.info['name'], user.info['email'])], fail_silently=False)
+        send_mail(email_form.cleaned_data['subject'], body, settings.SERVER_EMAIL, ["%s <%s>" % (user.info.get('name', user.info['email']), user.info['email'])], fail_silently=False)
       
       
       return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
@@ -678,7 +690,7 @@ def voter_list(request, election):
   limit = int(request.GET.get('limit', 500))
   if limit > 500: limit = 500
     
-  voters = Voter.get_by_election(election, after=request.GET.get('after',None), limit= limit)
+  voters = Voter.get_by_election(election, order_by='uuid', after=request.GET.get('after',None), limit= limit)
   return [v.toJSONDict() for v in voters]
   
 @election_view()

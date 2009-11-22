@@ -159,7 +159,7 @@ class Election(db.Model, electionalgs.Election):
     return self.frozen_at != None and datetime.datetime.utcnow() >= self.voting_starts_at
     
   def voting_has_stopped(self):
-    return datetime.datetime.utcnow() >= self.voting_ends_at
+    return datetime.datetime.utcnow() >= self.voting_ends_at or self.encrypted_tally
     
   def ready_for_decryption_combination(self):
     """
@@ -260,7 +260,7 @@ class Voter(db.Model, electionalgs.Voter):
   cast_at = db.DateTimeProperty(auto_now_add=False)
   
   @classmethod
-  def get_by_election(cls, election, cast=None, after=None, limit=None):
+  def get_by_election(cls, election, cast=None, order_by='voter_id', after=None, limit=None):
     q = cls.all()
     q.filter('election =', election)
     
@@ -273,11 +273,11 @@ class Voter(db.Model, electionalgs.Voter):
     # little trick to get around GAE limitation
     # order by uuid only when no inequality has been added
     if cast == None:
-      q.order('voter_id')
+      q.order(order_by)
       
       # if we want the list after a certain UUID, add the inequality here
       if after:
-        q.filter('voter_id >', after)
+        q.filter('%s >' % order_by, after)
     
     if limit:
       return [v for v in q.fetch(limit)]

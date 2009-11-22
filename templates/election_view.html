@@ -38,8 +38,6 @@ voting has not yet started
 <li> <a href="{% url helios.views.one_election_freeze election_id=election.uuid %}"><em>freeze</em> ballot and<br />open election for voting.</a></li>
 {% else %}
 
-{% ifequal election.tally_type "homomorphic" %}
-
 {% if election.encrypted_tally %}
 
 {% if election.result %}
@@ -60,10 +58,6 @@ voting has not yet started
 <li> <a href="{% url helios.views.one_election_compute_tally election_id=election.uuid %}">compute tally</a></li>
 
 {% endif %}
-
-{% else %}
-<li> custom tally</li>
-{% endifequal %}
 
 
 
@@ -200,11 +194,7 @@ Trustees:
 
 {% if election.result %}
 <p style="font-size: 1.2em;">
-{% ifequal election.tally_type "homomorphic" %}
-perform <a target="_blank" href="/verifier/verify.html?election_url={% url helios.views.one_election election.uuid %}">election tally</a>.
-{% else %}
-<b>This election uses a custom tallying mechanism, which must be audited by the custom code.</b>
-{% endifequal %}
+verify <a target="_blank" href="/verifier/verify.html?election_url={% url helios.views.one_election election.uuid %}">election tally</a>.
 
 review the <a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">voting booth</a>.
 </p>
