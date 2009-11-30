@@ -283,7 +283,7 @@ class EncryptedVote(HeliosObject):
     
     # check hash
     if self.election_hash != election.hash:
-      print "%s / %s " % (self.election_hash, election.hash)
+      # print "%s / %s " % (self.election_hash, election.hash)
       return False
       
     # check ID

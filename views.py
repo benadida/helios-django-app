@@ -86,7 +86,7 @@ def election_shortcut(request, election_short_name):
   if election:
     return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
   else:
-    return Http404
+    raise Http404
 
 @election_view()
 def election_keygenerator(request, election):
@@ -369,7 +369,7 @@ def one_election_bboard(request, election):
   
   # unless it's by alias, in which case we better go by UUID
   if election.use_voter_aliases:
-    order_by = 'uuid'
+    order_by = 'alias'
 
   # if there's a specific voter
   if request.GET.has_key('q'):
@@ -377,7 +377,7 @@ def one_election_bboard(request, election):
     voters = []
   else:
     # load a bunch of voters
-    voters = Voter.get_by_election(election, after=after, limit=limit+1)
+    voters = Voter.get_by_election(election, after=after, limit=limit+1, order_by=order_by)
     
   more_p = len(voters) > limit
   if more_p:

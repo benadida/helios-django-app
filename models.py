@@ -272,6 +272,7 @@ class Voter(db.Model, electionalgs.Voter):
     q.filter('election =', election)
     
     # the boolean check is not stupid, this is ternary logic
+    # none means don't care if it's cast or not
     if cast == True:
       q.filter('vote_hash !=', None)
     elif cast == False:
