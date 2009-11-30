@@ -46,9 +46,13 @@ function show_waiting() {
 </ul>
 -->
 {% else %}
-<em>no vote cast yet</em>
+<!--<em>no vote cast yet</em>-->
 {% endif %}
-<br /><br />
+
+<br />
+{% if election.voting_has_started %}
+{% if not election.voting_has_stopped %}
+<br />
 <div id="cast_form">
 <form method="post" action="" onsubmit="show_waiting()">
     <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
@@ -66,6 +70,16 @@ function show_waiting() {
     Verifying and Casting your ballot<br />
     <img src="/static/helios/loading.gif" />
 </div>
+{% else %}
+<p style="font-size:1.4em;">
+  voting has stopped, sorry.
+</p>
+{% endif %}
+{% else %}
+<p style="font-size:1.4em;">
+  voting has not yet begun, sorry.
+</p>
+{% endif %}
 {% else %}
 <p>
 {% if election.openreg %}

@@ -16,5 +16,5 @@ from django.core.urlresolvers import reverse
 
 # get the short path for the URL
 def get_election_url(election):
-  from views import one_election_view
-  return settings.URL_HOST + reverse(one_election_view, args=[election.uuid])
+  from views import election_shortcut
+  return settings.URL_HOST + reverse(election_shortcut, args=[election.short_name])

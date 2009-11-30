@@ -18,7 +18,9 @@ voting has not yet started
 <ul>
 {% if election.voting_has_started %}
 {% else %}
+{% if not election.frozen_at %}
 <li> <a href="edit">election parameters</a></li>
+{% endif %}
 {% endif %}
 <li> Registration 
 <b>{{ election.registration_status_pretty }}</b>
@@ -90,10 +92,9 @@ an election created by <u><b>{{election.admin.info.name}}</b></u>
 </div>
 
 {% if election.result %}
-<div class="highlight-box">
-    This election is complete. The tally is just below.
-    Check the <a href="#audit">auditing information</a>.
-</div>
+<span class="highlight-box round">
+    This election is complete. Tally and Audit info below.
+</span><br />
 
 <h3>Tally</h3>
 {% for question in election.pretty_result %}
@@ -108,20 +109,25 @@ an election created by <u><b>{{election.admin.info.name}}</b></u>
 {% else %}
 
 {% if election.voting_has_stopped %}
-<div class="highlight-box">
-    This election is closed. The tally will be computed soon.
-</div>
+<span class="highlight-box round">
+    Election closed. Tally will be computed soon.
+</span><br />
 {% else %}
 
 {% if election.voting_has_started %}
 <span class="highlight-box round" style="font-size: 1.6em; margin-right: 10px;">
 <a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">Vote in this election </a>
 </span><br /><br />
+{% else %}
+<span class="highlight-box round">
+  voting is not yet open
+</span> <br /><br />
 {% endif %}
 
 {% if user %}
 {% if voter %}
-<p style="padding-top:5px;">You are registered to vote in this election.
+<p style="padding-top:5px;">
+  You are registered to vote in this election.
 {% if election.use_voter_aliases %}
 Your voter alias is {{voter.alias}}.
 {% endif %}
@@ -189,7 +195,13 @@ Trustees:
 {% endfor %}
 [<a href="{% url helios.views.list_trustees_view election.uuid %}">more info</a>]
 </p>
-    
+
+{% if not election.voting_has_started %}
+<p style="font-size: 1.2em;">
+  <a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">preview booth</a>
+</p>
+{% endif %}  
+
 {% endif %}
 
 {% if election.result %}

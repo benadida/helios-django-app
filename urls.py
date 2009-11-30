@@ -11,6 +11,9 @@ urlpatterns = patterns('',
   (r'^$', home),
   (r'^about$', about),
 
+  # election shortcut by shortname
+  (r'^e/(?P<election_short_name>[^/]+)$', election_shortcut),
+  
   # election
   (r'^elections/params$', election_params),
   (r'^elections/verifier$', election_verifier),

@@ -81,6 +81,13 @@ def election_verifier(request):
 def election_single_ballot_verifier(request):
   return render_template(request, "ballot_verifier")
 
+def election_shortcut(request, election_short_name):
+  election = Election.get_by_short_name(election_short_name)
+  if election:
+    return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+  else:
+    return Http404
+
 @election_view()
 def election_keygenerator(request, election):
   """
@@ -307,6 +314,10 @@ def one_election_cast_confirm(request, election):
   if request.method == "POST":
     check_csrf(request)
     
+    # voting has not started or has ended
+    if (not election.voting_has_started()) or election.voting_has_stopped():
+      return HttpResponseRedirect("/")
+            
     # if user is not logged in
     # bring back to the confirmation page to let him know
     if not user or not voter:
@@ -317,13 +328,13 @@ def one_election_cast_confirm(request, election):
       # store it
       voter.store_vote(cast_vote)
     else:
-      return HttpResponse("vote does not verify: " + utils.to_json(cast_vote.vote.toJSONDict()))
+      return HttpResponse("vote does not verify: \n\n" + utils.to_json(cast_vote.vote.toJSONDict()))
     
     # remove the vote from the store
     del request.session['encrypted_vote']
     
     # send the signal
-    signals.vote_cast.send(sender=election, election=election, user=user, cast_vote=cast_vote)
+    signals.vote_cast.send(sender=election, election=election, user=user, voter=voter, cast_vote=cast_vote)
     
     return HttpResponseRedirect(reverse(one_election_cast_done, args=[election.uuid]))
   
@@ -431,9 +442,6 @@ def _register_voter(election, user):
   voter_uuid = str(uuid.uuid1())
   voter = Voter(uuid= voter_uuid, voter_type = user.user_type, voter_id = user.user_id, election = election)
   
-  if election.use_voter_aliases:
-    voter.alias = "V" + str(election.num_voters+1)
-    
   voter.put()
   return voter
     
@@ -593,8 +601,6 @@ def voters_upload(request, election):
     voters_csv_lines = request.POST['voters_csv'].split("\n")
     reader = csv.reader(voters_csv_lines)
 
-    voter_alias = election.num_voters + 1
-    
     for voter in reader:
 
       # bad line
@@ -620,10 +626,6 @@ def voters_upload(request, election):
       # create the voter
       voter_uuid = str(uuid.uuid1())
       voter = Voter(uuid= voter_uuid, voter_type = voter_type, voter_id = voter_id, name = name, election = election)
-
-      if election.use_voter_aliases:
-        voter.alias = "V" + str(voter_alias)
-        voter_alias += 1
 
       voter.put()
     

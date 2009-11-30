@@ -32,11 +32,13 @@ GLOBAL_COUNTER_ELECTIONS = 'global_counter_elections'
 # a counter incrementing function that is meant to run in a transaction
 def __increment_counter(key, counter_name, amount):
   obj = db.get(key)
-  setattr(obj, counter_name, getattr(obj, counter_name) + amount)
+  new_value = getattr(obj, counter_name) + amount
+  setattr(obj, counter_name, new_value)
   obj.put()
+  return new_value
   
 def increment_counter(key, counter_name, amount = 1):
-  db.run_in_transaction(__increment_counter, key, counter_name, amount)
+  return db.run_in_transaction(__increment_counter, key, counter_name, amount)
   
 class Election(db.Model, electionalgs.Election):
   admin = db.ReferenceProperty(User)
@@ -135,7 +137,12 @@ class Election(db.Model, electionalgs.Election):
   def get_by_short_name(cls, short_name):
     query = cls.all()
     query.filter('short_name = ', short_name)
-    return query.fetch(1)[0]
+    elections = query.fetch(1)
+    
+    if len(elections) > 0:
+      return elections[0]
+    else:
+      return None
   
   def user_eligible_p(self, user):
     """
@@ -195,16 +202,16 @@ class Election(db.Model, electionalgs.Election):
       self.voters_hash = utils.hash_b64(voters_json)
     
   def increment_voters(self):
-    increment_counter(self.key(), 'num_voters')
-    
     # increment global counter
     counters.increment(GLOBAL_COUNTER_VOTERS)
+
+    return increment_counter(self.key(), 'num_voters')
     
   def increment_cast_votes(self):
-    increment_counter(self.key(), 'num_cast_votes')
-
     # increment global counter
     counters.increment(GLOBAL_COUNTER_CAST_VOTES)
+
+    return increment_counter(self.key(), 'num_cast_votes')
     
   def put(self, *args, **kwargs):
     """
@@ -338,7 +345,11 @@ class Voter(db.Model, electionalgs.Voter):
 
     # do the increment afterwards in case of an exception which prevents the creation
     if increment_p:
-      self.election.increment_voters()
+      new_num_voters = self.election.increment_voters()
+      if self.election.use_voter_aliases:
+        self.alias = 'V' + str(new_num_voters)
+        # recursive only once, at least it should be
+        self.save()
 
   def store_vote(self, cast_vote):
     cast_vote.save()
