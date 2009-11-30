@@ -333,6 +333,8 @@ def one_election_cast_confirm(request, election):
     # remove the vote from the store
     del request.session['encrypted_vote']
     
+    import logging
+    logging.error("about to send signal!!")
     # send the signal
     signals.vote_cast.send(sender=election, election=election, user=user, voter=voter, cast_vote=cast_vote)
     
