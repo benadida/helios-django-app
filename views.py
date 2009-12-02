@@ -622,7 +622,7 @@ def voters_upload(request, election):
         
       if voter_type == 'password':
         # create the user
-        user = User.get_or_create(user_type=voter_type, user_id=voter_id, info = {'password': helios_utils.random_string(10), 'email': email, 'name': name})
+        user = User.update_or_create(user_type=voter_type, user_id=voter_id, info = {'password': helios_utils.random_string(10), 'email': email, 'name': name})
         user.put()
       
       # create the voter
