@@ -13,6 +13,10 @@
     <tt style="font-size:1.8em; font-weight: bold; padding-left: 20px;">  {{last_vote.vote_hash}}</tt>
 </p>
 
+{% if logout %}
+<p><b>For your safety, we recommend that you <a href="/auth/logout">log out immediately</a>.</b></p>
+{% endif %}
+
 <p style="font-size: 1.4em;">
 [ <a href="{% url helios.views.one_election_view election.uuid %}">return to election info</a> ]
 </p>

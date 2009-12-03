@@ -345,8 +345,13 @@ def one_election_cast_done(request, election):
   user = get_user(request)
   voter = Voter.get_by_election_and_user(election, user)
   votes = CastVote.get_by_election_and_voter(election, voter)
+
+  logout = settings.LOGOUT_ON_CONFIRMATION
   
-  return render_template(request, 'cast_done', {'election': election, 'last_vote': votes[0]})
+  if logout:
+    request.session.flush()
+    
+  return render_template(request, 'cast_done', {'election': election, 'last_vote': votes[0], 'logout': logout})
 
 @election_view()
 @json
