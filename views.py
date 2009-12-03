@@ -348,8 +348,8 @@ def one_election_cast_done(request, election):
 
   logout = settings.LOGOUT_ON_CONFIRMATION
   
-  if logout:
-    request.session.flush()
+  #if logout:
+  #  request.session.flush()
     
   return render_template(request, 'cast_done', {'election': election, 'last_vote': votes[0], 'logout': logout})
 
