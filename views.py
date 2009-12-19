@@ -88,16 +88,14 @@ def election_shortcut(request, election_short_name):
   else:
     raise Http404
 
-@election_view()
-def election_keygenerator(request, election):
+@trustee_check
+def trustee_keygenerator(request, election, trustee):
   """
   A key generator with the current params, like the trustee home but without a specific election.
   """
   eg_params_json = utils.to_json(ELGAMAL_PARAMS.toJSONDict())
-  user = get_user(request)
-  is_admin = user and (user == election.admin)
-  
-  return render_template(request, "election_keygenerator", {'eg_params_json': eg_params_json, 'election': election, 'is_admin': is_admin})
+
+  return render_template(request, "election_keygenerator", {'eg_params_json': eg_params_json, 'election': election, 'trustee': trustee})
 
 @login_required
 def election_new(request):
@@ -221,27 +219,74 @@ def new_trustee(request, election):
     return render_template(request, 'new_trustee', {'election' : election})
   else:
     # get the public key and the hash, and add it
-    public_key_and_proof = utils.from_json(request.POST['public_key_json'])
-    public_key = algs.EGPublicKey.fromJSONDict(public_key_and_proof['public_key'])
-    pok = algs.DLogProof.fromJSONDict(public_key_and_proof['pok'])
     name = request.POST['name']
+    email = request.POST['email']
     
-    # verify the pok
-    if not public_key.verify_sk_proof(pok, algs.DLog_challenge_generator):
-      raise Exception("bad pok for this public key")
-    
-    public_key_hash = utils.hash_b64(utils.to_json(public_key.toJSONDict()))
-    
-    trustee = Trustee(uuid = str(uuid.uuid1()), public_key = public_key, public_key_hash = public_key_hash, pok = pok, election = election, name=name)
+    trustee = Trustee(uuid = str(uuid.uuid1()), election = election, name=name, email=email)
     trustee.put()
     return HttpResponseRedirect(reverse(list_trustees_view, args=[election.uuid]))
-    
+  
 @election_admin()
 def delete_trustee(request, election):
   trustee = Trustee.get_by_election_and_uuid(election, request.GET['uuid'])
   trustee.delete()
   return HttpResponseRedirect(reverse(list_trustees_view, args=[election.uuid]))
   
+def trustee_login(request, election_short_name, trustee_email, trustee_secret):
+  election = Election.get_by_short_name(election_short_name)
+  if election:
+    trustee = Trustee.get_by_election_and_email(election, trustee_email)
+    
+    if trustee and trustee.secret == trustee_secret:
+      set_logged_in_trustee(request, trustee)
+      return HttpResponseRedirect(reverse(trustee_home, args=[election.uuid, trustee.uuid]))
+
+  return HttpResponseRedirect("/")
+
+@election_admin()
+def trustee_send_url(request, election, trustee_uuid):
+  trustee = Trustee.get_by_election_and_uuid(election, trustee_uuid)
+  
+  url = reverse(trustee_login, args=[election.short_name, trustee.email, trustee.secret])
+  
+  body = """
+
+You are a trustee for %s.
+
+Your trustee dashboard is at
+
+  %s
+  
+--
+Helios  
+""" % (election.name, url)
+
+  send_mail('your trustee homepage for %s' % election.name, body, settings.SERVER_EMAIL, ["%s <%s>" % (trustee.name, trustee.email)], fail_silently=False)
+
+  return HttpResponseRedirect(reverse(list_trustees_view, args = [election.uuid]))
+
+@trustee_check
+def trustee_home(request, election, trustee):
+  return render_template(request, 'trustee_home', {'election': election, 'trustee':trustee})
+  
+@trustee_check
+def trustee_upload_pk(request, election, trustee):
+  if request.method == "POST":
+    # get the public key and the hash, and add it
+    public_key_and_proof = utils.from_json(request.POST['public_key_json'])
+    trustee.public_key = algs.EGPublicKey.fromJSONDict(public_key_and_proof['public_key'])
+    trustee.pok = algs.DLogProof.fromJSONDict(public_key_and_proof['pok'])
+    
+    # verify the pok
+    if not trustee.public_key.verify_sk_proof(trustee.pok, algs.DLog_challenge_generator):
+      raise Exception("bad pok for this public key")
+    
+    trustee.public_key_hash = utils.hash_b64(utils.to_json(trustee.public_key.toJSONDict()))
+
+    trustee.put()
+    
+  return HttpResponseRedirect(reverse(trustee_home, args=[election.uuid, trustee.uuid]))
+    
   
 @election_view(frozen=True)
 def one_election_cast(request, election):
@@ -532,13 +577,11 @@ def one_election_compute_tally(request, election):
   else:
     return SUCCESS    
 
-@election_view()
-def trustee_decrypt_and_prove(request, election, trustee_uuid):
+@trustee_check
+def trustee_decrypt_and_prove(request, election, trustee):
   if not _check_election_tally_type(election) or election.encrypted_tally == None:
     return HttpResponseRedirect(reverse(one_election_view,args=[election.election_id]))
     
-  trustee = Trustee.get_by_election_and_uuid(election, trustee_uuid)
-
   return render_template(request, 'trustee_decrypt_and_prove', {'election': election, 'trustee': trustee})
   
 @election_view(frozen=True)

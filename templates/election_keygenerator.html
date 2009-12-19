@@ -90,7 +90,7 @@ $(document).ready(function() {
 <button onclick="show_pk(); return false;">ok, I've copied this to a safe place</button>
 </form>
 
-<form method="post" id="pk_form" action="{% url helios.views.new_trustee election.uuid %}">
+<form method="post" id="pk_form" action="{% url helios.views.trustee_upload_pk election.uuid, trustee.uuid %}">
 <h3>Your Public Key</h3>
 <p>
     This is the public key that corresponds to the secret key you just copied to a safe place.
@@ -98,16 +98,9 @@ $(document).ready(function() {
 <p>
     The fingerprint of this public key is: <tt id="pk_hash" style="font-size: 1.5em; font-weight: bold;"></tt>
 </p>
-<br />
-<textarea id="pk_textarea" name="public_key_json" cols="80" rows="10">
+<textarea id="pk_textarea" name="public_key_json" cols="80" rows="10" style="display:none;">
 </textarea>
-<br />
-{% if is_admin %}
-<h3>Upload this Key</h3>
-Since you are the election administrator, you may want to upload this public key directly.<br />
-Name: <input type="text" name="name" value="{{user.user_id}}" /><br /><br />
-<input type="submit" value="submit">
-{% endif %}
+<input type="submit" value="upload your public key now">
 </form>
 
 <div id="applet_div"></div>

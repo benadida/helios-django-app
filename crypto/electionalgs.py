@@ -112,6 +112,12 @@ class HeliosObject(object):
   
   def _process_value_out(self, field_name, field_value):
     return None
+    
+  def __eq__(self, other):
+    if not hasattr(self, 'uuid'):
+      return super(HeliosObject,self).__eq__(other)
+    
+    return other != None and self.uuid == other.uuid
   
 class EncryptedAnswer(object):
   """

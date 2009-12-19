@@ -17,9 +17,14 @@ urlpatterns = patterns('',
     # adding trustees
     (r'^/trustees/$', list_trustees),
     (r'^/trustees/view$', list_trustees_view),
-    (r'^/trustees/keygenerator$', election_keygenerator),
     (r'^/trustees/new$', new_trustee),
     (r'^/trustees/delete$', delete_trustee),
+    
+    # trustee pages
+    (r'^/trustees/(?P<trustee_uuid>[^/]+)/home$', trustee_home),
+    (r'^/trustees/(?P<trustee_uuid>[^/]+)/sendurl$', trustee_send_url),
+    (r'^/trustees/(?P<trustee_uuid>[^/]+)/keygenerator$', trustee_keygenerator),
+    (r'^/trustees/(?P<trustee_uuid>[^/]+)/upoad-pk$', trustee_upload_pk),
     (r'^/trustees/(?P<trustee_uuid>[^/]+)/decrypt-and-prove$', trustee_decrypt_and_prove),
     (r'^/trustees/(?P<trustee_uuid>[^/]+)/upload-decryption$', trustee_upload_decryption),
     

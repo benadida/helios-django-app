@@ -1,23 +1,11 @@
 {% extends "helios/templates/cryptobase.html" %}
 
 {% block admin %}
-<p>
-    Typically, you want at least two trustees, so that no single individual can decrypt votes on his/her own. However, if this is a simple election, a single trustee is acceptable.
-</p>
-
 {% if not election.frozen_at %}
 <p>
-    As administrator, you can<br /><a href="{% url helios.views.election_keygenerator election.uuid %}">generate and upload a key in one step</a>.
-</p>
-
-<p>
-    For other trustees, ask them to visit the key generation page:<br /><br />
-    <tt>{{ settings.URL_HOST }}{% url helios.views.election_keygenerator election.uuid %}</tt>.<br /><br />
-    When they send you the public key, you can 
-    <a href="{% url helios.views.new_trustee election.uuid %}">upload it</a> .
+    <a href="{% url helios.views.new_trustee election.uuid %}">new trustee</a>
 </p>
 {% endif %}
-
 {% endblock %}
 
 {% block content %}
@@ -37,11 +25,20 @@
 
 {% for t in trustees %}
 <h3> Trustee #{{forloop.counter}}: {{t.name}} {% if not election.frozen_at %}
+{% if admin_p %}
+({{t.email}})
 [<a onclick="return confirm('Are you sure you want to remove this Trustee?');" href="{% url helios.views.delete_trustee election.uuid %}?uuid={{t.uuid}}">x</a>]
+[<a onclick="return confirm('Are you sure you want to send this trustee his/her admin URL?');" href="{% url helios.views.trustee_send_url election.uuid t.uuid %}">send login</a>]
+{% endif %}
 {% endif %}
 </h3>
+
 <p>
+{% if t.public_key_hash %}
   Public Key Fingerprint: <tt style="font-size:1.5em;">{{t.public_key_hash}}</tt>
+{% else %}
+No public key uploaded yet.
+{% endif %}
 </p>
 
 {% if election.encrypted_tally %}

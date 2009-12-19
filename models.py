@@ -16,6 +16,8 @@ from google.appengine.api import datastore_types
 
 from crypto import electionalgs, algs, utils
 
+from helios import utils as heliosutils
+
 import helios
 
 # counters
@@ -291,6 +293,20 @@ class Voter(db.Model, electionalgs.Voter):
       return [v for v in q.fetch(limit)]
     else:
       return [v for v in q]
+
+  @classmethod
+  def get_all_by_election_in_chunks(cls, election, cast=None, chunk=100):
+    voters = []
+    after = None
+
+    while True:
+      new_voters = cls.get_by_election(election, cast=cast, after=after, limit=chunk)
+      if len(new_voters) == 0:
+        break
+      voters += new_voters
+      after = new_voters[-1].voter_id
+    
+    return voters
     
   @classmethod
   def get_by_election_and_user(cls, election, user):
@@ -398,8 +414,9 @@ class Trustee(db.Model, electionalgs.Trustee):
   election = db.ReferenceProperty(Election)
   
   uuid = db.StringProperty(multiline=False)
-  
   name = db.StringProperty(multiline=False)
+  email = db.EmailProperty()
+  secret = db.StringProperty(multiline=False)
   
   # public key
   public_key = JSONProperty(algs.EGPublicKey)
@@ -412,18 +429,41 @@ class Trustee(db.Model, electionalgs.Trustee):
   decryption_factors = JSONProperty()
   decryption_proofs = JSONProperty()
   
+  def put(self, *args, **kwargs):
+    """
+    override this just to get a hook
+    """
+    # not saved yet?
+    if not self.secret:
+      self.secret = heliosutils.random_string(12)
+      
+    super(Trustee, self).put(*args, **kwargs)
+  
   @classmethod
   def get_by_election(cls, election):
     q = cls.all()
     q.filter('election =', election)
     
     return [t for t in q]
+
+  @classmethod
+  def get_by_uuid(cls, uuid):
+    q = cls.all()
+    q.filter('uuid = ', uuid)
+    return q.fetch(1)[0]
     
   @classmethod
   def get_by_election_and_uuid(cls, election, uuid):
     q = cls.all()
     q.filter('election =', election)
     q.filter('uuid = ', uuid)
+    return q.fetch(1)[0]
+
+  @classmethod
+  def get_by_election_and_email(cls, election, email):
+    q = cls.all()
+    q.filter('election =', election)
+    q.filter('email = ', email)
     return q.fetch(1)[0]
     
   def verify_decryption_proofs(self):

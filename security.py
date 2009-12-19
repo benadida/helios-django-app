@@ -17,6 +17,17 @@ from django.http import HttpResponseRedirect
 
 import helios
 
+# a function to check if the current user is a trustee
+HELIOS_TRUSTEE_UUID = 'helios_trustee_uuid'
+def get_logged_in_trustee(request):
+  if request.session.has_key(HELIOS_TRUSTEE_UUID):
+    return Trustee.get_by_uuid(request.session[HELIOS_TRUSTEE_UUID])
+  else:
+    return None
+
+def set_logged_in_trustee(request, trustee):
+  request.session[HELIOS_TRUSTEE_UUID] = trustee.uuid
+
 #
 # some common election checks
 #
@@ -59,8 +70,8 @@ def get_election_by_uuid(uuid):
 def election_view(**checks):
   
   def election_view_decorator(func):
-    def election_view_wrapper(request, election_id=None, *args, **kw):
-      election = get_election_by_uuid(election_id)
+    def election_view_wrapper(request, election_uuid=None, *args, **kw):
+      election = get_election_by_uuid(election_uuid)
     
       # do checks
       do_election_checks(election, checks)
@@ -83,8 +94,8 @@ def api_client_can_admin_election(api_client, election):
 def election_admin(**checks):
   
   def election_admin_decorator(func):
-    def election_admin_wrapper(request, election_id=None, *args, **kw):
-      election = get_election_by_uuid(election_id)
+    def election_admin_wrapper(request, election_uuid=None, *args, **kw):
+      election = get_election_by_uuid(election_uuid)
 
       user = get_user(request)
       if not user or not (user == election.admin):
@@ -98,6 +109,19 @@ def election_admin(**checks):
     return update_wrapper(election_admin_wrapper, func)
     
   return election_admin_decorator
+  
+def trustee_check(func):
+  def trustee_check_wrapper(request, election_uuid, trustee_uuid, *args, **kwargs):
+    election = get_election_by_uuid(election_uuid)
+    
+    trustee = Trustee.get_by_election_and_uuid(election, trustee_uuid)
+    
+    if trustee == get_logged_in_trustee(request):
+      return func(request, election, trustee, *args, **kwargs)
+    else:
+      raise PermissionDenied()
+  
+  return update_wrapper(trustee_check_wrapper, func)
 
 def can_create_election(request):
   user = get_user(request)
