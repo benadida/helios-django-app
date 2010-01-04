@@ -115,7 +115,7 @@ class HeliosObject(object):
     
   def __eq__(self, other):
     if not hasattr(self, 'uuid'):
-      return super(HeliosObject,self).__eq__(other)
+      return super(HeliosObject,self) == other
     
     return other != None and self.uuid == other.uuid
   

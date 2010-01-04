@@ -109,13 +109,14 @@ function submit_result() {
 }
 
 </script>
-  <h2 class="title">Decrypt Result for {{election.name}}</h2>
+  <h2 class="title">Trustee {{trustee.name}} &mdash; Decrypt Result for {{election.name}}</h2>
 
 <p>
-    <b>Trustee:</b> <tt>{{trustee.public_key_hash}}</tt>
+    <b>Trustee:</b> <tt>{{trustee.email}}</tt><br />
+    <b>Public Key Fingerprint:</b> <tt>{{trustee.public_key_hash}}</tt>
     </p>
     <p>
-      The encrypted tally for your election has been computed. Now it's time to provide this trustee's secret key to compute a partial decryption which, when combined with other trustees' partial decryptions, will yield the results.
+      The encrypted tally for your election has been computed. Now it's time to provide your secret key to compute your partial decryption.
     </p>
     
     <p>

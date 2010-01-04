@@ -16,20 +16,7 @@
 </table>
 
 {% if upload_p %}
-<p>
-    Please enter CSV content for your list of voters as follows:
-</p>
-<pre>
-    password,benadida,ben@adida.net,Ben Adida
-    password,bob,bob@acme.org,Bob Acme
-    ...
-</pre> 
-<form method="post" action="upload">
-    <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
-    
-    <textarea name="voters_csv" cols="80" rows="10"></textarea><br /><br />
-    <input type="submit" value="go" />
-</form>
+<a href="{% url helios.views.voters_upload election_uuid=election.uuid %}">bulk upload voters</a>
 {% endif %}
 
 {% endblock %}

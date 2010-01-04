@@ -263,6 +263,7 @@ Helios
 
   send_mail('your trustee homepage for %s' % election.name, body, settings.SERVER_EMAIL, ["%s <%s>" % (trustee.name, trustee.email)], fail_silently=False)
 
+  logging.info("URL %s " % url)
   return HttpResponseRedirect(reverse(list_trustees_view, args = [election.uuid]))
 
 @trustee_check
@@ -647,6 +648,9 @@ def voters_upload(request, election):
   
   name and email are needed only if voter_type is static
   """
+  if request.method == "GET":
+    return render_template(request, 'voters_upload', {'election': election})
+    
   if request.method == "POST":
     voters_csv_lines = request.POST['voters_csv'].split("\n")
     reader = csv.reader(voters_csv_lines)
