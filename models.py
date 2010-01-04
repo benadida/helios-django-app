@@ -67,6 +67,9 @@ class Election(db.Model, electionalgs.Election):
   # this is now used to indicate the state of registration,
   # whether or not the election is frozen
   openreg = db.BooleanProperty(default=False)
+  
+  # featured election?
+  featured_p = db.BooleanProperty(default=False)
     
   # voter aliases?
   use_voter_aliases = db.BooleanProperty(default=False)
@@ -100,6 +103,11 @@ class Election(db.Model, electionalgs.Election):
   num_voters = db.IntegerProperty(default = 0)
   num_cast_votes = db.IntegerProperty(default = 0)
 
+  @classmethod
+  def get_featured(cls):
+    query = cls.all().filter('featured_p = ', True)
+    return [e for e in query]
+    
   @classmethod
   def get_or_create(cls, **kwargs):
     key_name = kwargs['short_name']
