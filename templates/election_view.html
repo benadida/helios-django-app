@@ -34,10 +34,10 @@ voting has not yet started
 </li>
 
 {% if not election.frozen_at %}
-<li> <a href="{% url helios.views.one_election_build election_id=election.uuid %}">questions and answers</a></li>
+<li> <a href="{% url helios.views.one_election_build election.uuid %}">questions and answers</a></li>
 <li> <a href="{% url helios.views.list_trustees_view election.uuid %}">trustees</a></li>
-<li> <a href="{% url helios.views.voters_manage election_id=election.uuid %}">manage voters</a></li>
-<li> <a href="{% url helios.views.one_election_freeze election_id=election.uuid %}"><em>freeze</em> ballot and<br />open election for voting.</a></li>
+<li> <a href="{% url helios.views.voters_manage election.uuid %}">manage voters</a></li>
+<li> <a href="{% url helios.views.one_election_freeze election.uuid %}"><em>freeze</em> ballot and<br />open election for voting.</a></li>
 {% else %}
 
 {% if election.encrypted_tally %}
@@ -55,9 +55,9 @@ voting has not yet started
 {% else %}
 
 {% if email_voters %}
-<li> <a href="{% url helios.views.voters_email election_id=election.uuid %}">email voters</a></li>
+<li> <a href="{% url helios.views.voters_email election.uuid %}">email voters</a></li>
 {% endif %}
-<li> <a href="{% url helios.views.one_election_compute_tally election_id=election.uuid %}">compute tally</a></li>
+<li> <a href="{% url helios.views.one_election_compute_tally election.uuid %}">compute tally</a></li>
 
 {% endif %}
 
