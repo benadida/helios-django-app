@@ -16,6 +16,15 @@ voting has not yet started
 
 
 <ul>
+<li> Featured Election:
+{% if election.featured_p %}
+<b>YES</b>
+[<a href="{% url helios.views.one_election_set_featured election.uuid %}?featured_p=0">toggle</a>]
+{% else %}
+<b>NO</b>
+[<a href="{% url helios.views.one_election_set_featured election.uuid %}?featured_p=1">toggle</a>]
+{% endif %}
+</li>
 {% if election.voting_has_started %}
 {% else %}
 {% if not election.frozen_at %}

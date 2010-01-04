@@ -463,6 +463,17 @@ def one_election_set_reg(request, election):
   return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
 
 @election_admin()
+def one_election_set_featured(request, election):
+  """
+  Set whether this is a featured election or not
+  """
+  featured_p = bool(int(request.GET['featured_p']))
+  election.featured_p = featured_p
+  election.save()
+  
+  return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+
+@election_admin()
 def one_election_archive(request, election, admin, api_client):
   
   archive_p = request.GET.get('archive_p', True)

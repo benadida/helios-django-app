@@ -37,6 +37,7 @@ urlpatterns = patterns('',
     # construct election
     (r'^/build$', one_election_build),
     (r'^/set_reg$', one_election_set_reg),
+    (r'^/set_featured$', one_election_set_featured),
     (r'^/save_questions$', one_election_save_questions),
     (r'^/register$', one_election_register),
     (r'^/freeze$', one_election_freeze), # includes freeze_2 as POST target
