@@ -795,7 +795,17 @@ def voter_last_vote(request, election, voter_uuid):
 @election_view()
 @json
 def ballot_list(request, election):
-  voters = Voter.get_by_election(election, cast=True)
+  """
+  this will order the ballots from most recent to oldest.
+  and optionally take a after parameter.
+  """
+  limit = after = None
+  if request.GET.has_key('limit'):
+    limit = int(request.GET['limit'])
+  if request.GET.has_key('after'):
+    after = datetime.datetime.strptime(request.GET['after'], '%Y-%m-%d %H:%M:%S')
+    
+  voters = Voter.get_by_election(election, cast=True, order_by='-cast_at', limit=limit, after=after)
   return [v.last_cast_vote().toJSONDict(include_vote=False) for v in voters]
 
 

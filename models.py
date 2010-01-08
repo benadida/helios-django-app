@@ -284,18 +284,21 @@ class Voter(db.Model, electionalgs.Voter):
     # the boolean check is not stupid, this is ternary logic
     # none means don't care if it's cast or not
     if cast == True:
-      q.filter('vote_hash !=', None)
+      q.filter('cast_at !=', None)
     elif cast == False:
-      q.filter('vote_hash =', None)
+      q.filter('cast_at =', None)
 
     # little trick to get around GAE limitation
     # order by uuid only when no inequality has been added
-    if cast == None:
+    if cast == None or order_by == 'cast_at' or order_by =='-cast_at':
       q.order(order_by)
       
       # if we want the list after a certain UUID, add the inequality here
       if after:
-        q.filter('%s >' % order_by, after)
+        if order_by[0] == '-':
+          q.filter('%s >' % order_by[1:], after)
+        else:
+          q.filter('%s >' % order_by, after)
     
     if limit:
       return [v for v in q.fetch(limit)]
