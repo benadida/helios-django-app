@@ -13,8 +13,12 @@ Your public key fingerprint: <b>{{trustee.public_key_hash}}</b>
 
 {% if election.encrypted_tally %}
 <p>
+{% if trustee.decryption_factors %}
+You have successfully uploaded your decryption.
+{% else %}
     The encrypted tally for this election is ready.<br />
     <a href="{% url helios.views.trustee_decrypt_and_prove election.uuid, trustee.uuid %}">decrypt with your key</a>
+{% endif %}
 </p>
 {% endif %}
 

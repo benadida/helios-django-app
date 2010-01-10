@@ -8,7 +8,10 @@ Ben Adida (ben@adida.net)
 from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.http import *
+
 from google.appengine.ext import db
+from google.appengine.api import memcache
+
 from mimetypes import guess_type
 
 import csv
@@ -258,7 +261,7 @@ def trustee_login(request, election_short_name, trustee_email, trustee_secret):
 def trustee_send_url(request, election, trustee_uuid):
   trustee = Trustee.get_by_election_and_uuid(election, trustee_uuid)
   
-  url = reverse(trustee_login, args=[election.short_name, trustee.email, trustee.secret])
+  url = settings.URL_HOST + reverse(trustee_login, args=[election.short_name, trustee.email, trustee.secret])
   
   body = """
 
@@ -576,6 +579,10 @@ def _check_election_tally_type(election):
 
 @election_admin(frozen=True)
 def one_election_compute_tally(request, election):
+  """
+  Tallying is done in chunks of 50 votes at a time, to ensure that it fits
+  within GAE computation limits.
+  """
   if not _check_election_tally_type(election):
     return HttpResponseRedirect(reverse(one_election_view,args=[election.election_id]))
 
@@ -583,22 +590,45 @@ def one_election_compute_tally(request, election):
     return render_template(request, 'election_compute_tally', {'election': election})
   
   check_csrf(request)
-    
-  voters = Voter.get_by_election(election, cast=True)
 
-  tally = election.init_tally()
-  
-  # get the votes and set the public key
-  votes = [v.vote for v in voters]
-  tally.add_vote_batch(votes, verify_p=False)
+  limit = after = None
+  if request.POST.has_key('limit'):
+    limit = int(request.POST['limit'])
+  if request.POST.has_key('after'):
+    after = request.POST['after']
 
-  election.encrypted_tally = tally
-  election.save()
+  # pull out the subset of voters
+  # some may not have cast a ballot
+  voters = Voter.get_by_election(election, order_by='voter_id', limit=limit, after=after)
   
-  if get_user(request):
-    return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+  # if we have "after", then we should have the tally stored in memcache
+  if after != None:
+    memcache_key = "TALLY-%s-%s" % (election.uuid, after)
+    tally = memcache.get(memcache_key)
+    if not tally:
+      raise Exception("problem tallying, try again")
+    memcache.delete(memcache_key)
   else:
-    return SUCCESS    
+    tally = election.init_tally()
+  
+  # did we get some voters?
+  if len(voters) > 0:
+    # get the votes and set the public key
+    votes = [v.vote for v in voters if v.vote != None]
+    tally.add_vote_batch(votes, verify_p=False)
+    
+    # store in memcache
+    next_after = voters[-1].voter_id
+    memcache_key = "TALLY-%s-%s" % (election.uuid, next_after)
+    memcache.set(memcache_key, tally)
+    
+    return HttpResponse(next_after)
+  else:
+    # if we had no more voters, than we are done
+    election.encrypted_tally = tally
+    election.save()
+
+    return HttpResponse("")
 
 @trustee_check
 def trustee_decrypt_and_prove(request, election, trustee):
@@ -741,8 +771,6 @@ def voters_email(request, election):
 
       # go through a subset of the voters
       voters = Voter.get_by_election(election, order_by='voter_id', limit=limit, after=after)
-      # FIXME for large # of voters
-      voters = Voter.get_by_election(election)
       
       for voter in voters:
         if voter.voter_type != 'password':
@@ -750,7 +778,8 @@ def voters_email(request, election):
         
         user = voter.user
         body = """
-dear %s,
+Dear %s,
+
 """ % voter.name
 
         body += email_form.cleaned_data['body'] + """
@@ -784,7 +813,7 @@ Helios
         return_value = voters[-1].voter_id
       return HttpResponse(return_value)
     
-  return render_template(request, "voters_email", {'email_form': email_form})    
+  return render_template(request, "voters_email", {'email_form': email_form, 'election': election})    
 
 # Individual Voters
 @election_view()

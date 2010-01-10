@@ -44,7 +44,7 @@ No public key uploaded yet.
 {% if t.decryption_factors %}
 <b>tally recorded for this trustee.</b>
 {% else %}
-[<a href="{% url helios.views.trustee_decrypt_and_prove election.uuid, t.uuid %}">decrypt</a>]
+<em>waiting for this trustee's tally</em>
 {% endif %}
 {% endif %}
 </li>

@@ -15,26 +15,26 @@ function iterate_batches(subject, body, after, limit) {
     
     // result gives the last voter_id
     if (result != "") {
-      iterate_batches(lines, result, limit);
+      iterate_batches(subject, body, result, limit);
     } else {
       $('#done').show();
     }
   });
 }
 
-function batch_upload() {
-  var lines = $('#voters_csv').val().split('\n');
+function batch_email() {
   $('#email_form').hide();
   
-  $('#processing').append("now uploading voters in batches of " + BATCH_SIZE + "<br />");
+  $('#processing').append("now emailing voters in batches of " + BATCH_SIZE + "<br />");
   
-  iterate_batches(lines, 0, BATCH_SIZE);
+  var form = $('#email_form')[0];
+  iterate_batches(form.subject.value, form.body.value, 0, BATCH_SIZE);
 }
 </script>
 
-  <h2 class="title">Email Voters</h2>
+  <h2 class="title">{{election.name}} &mdash; Email Voters <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>]</span></h2>
   
-  <form class="prettyform" action="" method="POST" id="email_form">
+  <form class="prettyform" action="javascript:batch_email();" method="POST" id="email_form">
     <table class="pretty">
      {{email_form.as_table}}
      </table>
@@ -42,5 +42,12 @@ function batch_upload() {
   <label for="">&nbsp;</label><input type="submit" value="Send" id="send_button" />
   </div>
   </form>
+  
+  <div id="processing">
+  </div>
+  
+  <div id="done" style="display:none;">
+    Done, go <a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>.
+  </div>
 
 {% endblock %}
