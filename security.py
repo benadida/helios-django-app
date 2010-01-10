@@ -125,8 +125,11 @@ def trustee_check(func):
 
 def can_create_election(request):
   user = get_user(request)
+  if not user:
+    return False
+    
   if helios.ADMIN_ONLY:
-    return user == helios.ADMIN
+    return user.admin_p
   else:
     return user != None
   

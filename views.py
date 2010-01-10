@@ -98,9 +98,20 @@ def trustee_keygenerator(request, election, trustee):
   return render_template(request, "election_keygenerator", {'eg_params_json': eg_params_json, 'election': election, 'trustee': trustee})
 
 @login_required
+def elections_administered(request):
+  if not can_create_election(request):
+    return HttpResponseForbidden('only an administrator has elections to administer')
+  
+  user = get_user(request)
+  elections = Election.get_by_user_as_admin(user)
+  
+  return render_template(request, "elections_administered", {'elections': elections})
+    
+
+@login_required
 def election_new(request):
   if not can_create_election(request):
-    return HttpResponseForbidden('only the admin can create an election')
+    return HttpResponseForbidden('only an administrator can create an election')
     
   error = None
   
@@ -645,17 +656,30 @@ def voters_manage(request, election):
   Show the list of voters
   """
   after = request.GET.get('after', None)
-  limit = int(request.GET.get('limit', 200))
-
-  voters = Voter.get_by_election(election, after=request.GET.get('after', None), limit=limit+1)
+  offset= int(request.GET.get('offset', 0))
+  limit = int(request.GET.get('limit', 50))
   
-  return render_template(request, 'voters_manage', {'election': election, 'voters': voters, 'upload_p': helios.VOTERS_UPLOAD})
+  order_by = 'voter_id'
+  
+  # load a bunch of voters
+  voters = Voter.get_by_election(election, after=after, limit=limit+1, order_by=order_by)
+    
+  more_p = len(voters) > limit
+  if more_p:
+    voters = voters[0:limit]
+    next_after = getattr(voters[limit-1], order_by)
+  else:
+    next_after = None
+    
+  return render_template(request, 'voters_manage', {'election': election, 'voters': voters, 'next_after': next_after,
+                'offset': offset, 'limit': limit, 'offset_plus_one': offset+1, 'offset_plus_limit': offset+min(limit,len(voters)), 'upload_p': helios.VOTERS_UPLOAD})
+
   
 @election_admin(frozen=False)
 def voters_upload(request, election):
   """
   Upload a CSV of password-based voters with
-  voter_type, voter_id, email, name
+  voter_id, email, name
   
   name and email are needed only if voter_type is static
   """
@@ -669,32 +693,33 @@ def voters_upload(request, election):
     for voter in reader:
 
       # bad line
-      if len(voter) < 2:
+      if len(voter) < 1:
         continue
 
-      voter_type = voter[0]
-      voter_id = voter[1]
+      voter_id = voter[0]
       name = voter_id
       email = voter_id
       
-      if len(voter) > 2:
-        email = voter[2]
+      if len(voter) > 1:
+        email = voter[1]
       
-      if len(voter) > 3:
-        name = voter[3]
+      if len(voter) > 2:
+        name = voter[2]
         
-      if voter_type == 'password':
-        # create the user
-        user = User.update_or_create(user_type=voter_type, user_id=voter_id, info = {'password': helios_utils.random_string(10), 'email': email, 'name': name})
-        user.put()
+      # create the user
+      user = User.update_or_create(user_type='password', user_id=voter_id, info = {'password': helios_utils.random_string(10), 'email': email, 'name': name})
+      user.put()
+      
+      # does voter for this user already exist
+      voter = Voter.get_by_election_and_user(election, user)
       
       # create the voter
-      voter_uuid = str(uuid.uuid1())
-      voter = Voter(uuid= voter_uuid, voter_type = voter_type, voter_id = voter_id, name = name, election = election)
-
-      voter.put()
+      if not voter:
+        voter_uuid = str(uuid.uuid1())
+        voter = Voter(uuid= voter_uuid, voter_type = 'password', voter_id = voter_id, name = name, election = election)
+        voter.put()
     
-  return HttpResponseRedirect(reverse(voters_manage, args=[election.uuid]))
+    return HttpResponse("OK")
 
 @election_admin(frozen=True)
 def voters_email(request, election):
@@ -708,7 +733,14 @@ def voters_email(request, election):
     
     if email_form.is_valid():
       
-      # go through all voters
+      limit = after = None
+      if request.POST.has_key('limit'):
+        limit = int(request.POST['limit'])
+      if request.POST.has_key('after'):
+        after = request.POST['after']
+
+      # go through a subset of the voters
+      voters = Voter.get_by_election(election, order_by='voter_id', limit=limit, after=after)
       # FIXME for large # of voters
       voters = Voter.get_by_election(election)
       
@@ -718,14 +750,15 @@ def voters_email(request, election):
         
         user = voter.user
         body = """
-Dear %s,
+dear %s,
 """ % voter.name
 
         body += email_form.cleaned_data['body'] + """
         
 Election URL:  %s
+Election Fingerprint:  %s
 Your username: %s
-Your password: %s""" % (get_election_url(election), user.user_id, user.info['password'])
+Your password: %s""" % (get_election_url(election), election.hash, user.user_id, user.info['password'])
 
         if election.use_voter_aliases:
           body+= """
@@ -744,8 +777,12 @@ Helios
 
         send_mail(email_form.cleaned_data['subject'], body, settings.SERVER_EMAIL, ["%s <%s>" % (user.info.get('name', user.info['email']), user.info['email'])], fail_silently=False)
       
-      
-      return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+      # now a batch process, will just return OK
+      #return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+      return_value = ""
+      if len(voters) > 0:
+        return_value = voters[-1].voter_id
+      return HttpResponse(return_value)
     
   return render_template(request, "voters_email", {'email_form': email_form})    
 
@@ -809,5 +846,5 @@ def ballot_list(request, election):
   return [v.last_cast_vote().toJSONDict(include_vote=False) for v in voters]
 
 
-  
+
 

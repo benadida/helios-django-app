@@ -1,10 +1,40 @@
 {% extends TEMPLATE_BASE %}
 
 {% block content %}
+<script>
+var BATCH_SIZE = 25;
+
+function iterate_batches(subject, body, after, limit) {
+  var params = {'limit' : BATCH_SIZE, 'subject': subject, 'body': body};
+  if (after)
+    params['after'] = after;
+  
+  // submit it
+  $.post('./email', params, function(result){
+    $('#processing').append("emailed " + limit + " voters.<br />");
+    
+    // result gives the last voter_id
+    if (result != "") {
+      iterate_batches(lines, result, limit);
+    } else {
+      $('#done').show();
+    }
+  });
+}
+
+function batch_upload() {
+  var lines = $('#voters_csv').val().split('\n');
+  $('#email_form').hide();
+  
+  $('#processing').append("now uploading voters in batches of " + BATCH_SIZE + "<br />");
+  
+  iterate_batches(lines, 0, BATCH_SIZE);
+}
+</script>
 
   <h2 class="title">Email Voters</h2>
   
-  <form class="prettyform" action="" method="POST" id="create_election_form">
+  <form class="prettyform" action="" method="POST" id="email_form">
     <table class="pretty">
      {{email_form.as_table}}
      </table>

@@ -1,22 +1,61 @@
 {% extends TEMPLATE_BASE %}
 
 {% block content %}
-  <h2 class="title">{{election.name}} &mdash; Bulk Upload Voters <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">done</a>]</span></h2>
+<script>
+var BATCH_SIZE = 25;
 
-<p>
-    If your election allows for password-based voters, then you can bulk upload them here.<br />
-    Please enter CSV content for your list of voters as follows:
-</p>
-<pre>
-    benadida,ben@adida.net,Ben Adida
-    bob,bob@acme.org,Bob Acme
-    ...
-</pre> 
-<form method="post" action="upload">
+function iterate_batches(lines, offset, limit) {
+  // base condition
+  if (offset >=  lines.length) {
+    $('#done').show();
+    return;
+  }
+    
+  // a subset of the CSV
+  var one_batch_lines = lines.slice(offset, offset+limit);
+  var one_batch = one_batch_lines.join('\n');
+  
+  // submit it
+  $.post('./upload', {'voters_csv': one_batch}, function(result){
+    $('#processing').append("uploaded " + one_batch_lines.length + " voters. Total " + Math.min(lines.length, offset+limit) + ".<br />");
+    iterate_batches(lines, offset+limit, limit);
+  });
+}
+
+function batch_upload() {
+  var lines = $('#voters_csv').val().split('\n');
+  $('#upload_form').hide();
+  
+  $('#processing').append("now uploading voters in batches of " + BATCH_SIZE + "<br />");
+  
+  iterate_batches(lines, 0, BATCH_SIZE);
+}
+</script>
+</script>
+  <h2 class="title">{{election.name}} &mdash; Bulk Upload Voters <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>]</span></h2>
+
+<form method="post" action="javascript:batch_upload()" id="upload_form">
+  <p>
+      If your election allows for password-based voters, then you can bulk upload them here.<br />
+      Please enter CSV content for your list of voters as follows:
+  </p>
+  <pre>
+      benadida,ben@adida.net,Ben Adida
+      bob,bob@acme.org,Bob Acme
+      ...
+  </pre> 
     <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
     
-    <textarea name="voters_csv" cols="80" rows="10"></textarea><br /><br />
+    <textarea name="voters_csv" id="voters_csv" cols="80" rows="10"></textarea><br /><br />
     <input type="submit" value="go" />
 </form>
+
+<div id="processing">
+</div>
+
+<div id="done" style="display:none;">
+  OK, done uploading.<br />
+  You can now <a href="./manage">view the list of voters</a>.
+</div>
 
 {% endblock %}
