@@ -871,7 +871,7 @@ def ballot_list(request, election):
   if request.GET.has_key('after'):
     after = datetime.datetime.strptime(request.GET['after'], '%Y-%m-%d %H:%M:%S')
     
-  voters = Voter.get_by_election(election, cast=True, order_by='-cast_at', limit=limit, after=after)
+  voters = Voter.get_by_election(election, cast=True, order_by='cast_at', limit=limit, after=after)
   return [v.last_cast_vote().toJSONDict(include_vote=False) for v in voters]
 
 
