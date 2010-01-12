@@ -421,6 +421,15 @@ class CastVote(db.Model, electionalgs.CastVote):
     q.order('-cast_at')
     return [v for v in q]
     
+class OpenBallot(db.Model):
+  """
+  ballots for auditing
+  """
+  election = db.ReferenceProperty(Election)
+  vote = JSONProperty(electionalgs.EncryptedVote)
+  vote_hash = db.StringProperty(multiline=False)
+  added_at = db.DateTimeProperty(auto_now_add=True)
+    
 class Trustee(db.Model, electionalgs.Trustee):
   election = db.ReferenceProperty(Election)
   

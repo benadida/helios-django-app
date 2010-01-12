@@ -28,9 +28,7 @@ FAILURE = HttpResponse("FAILURE")
 ##
 ## template abstraction
 ##
-def render_template(request, template_name, vars = {}):
-  t = loader.get_template(template_name + '.html')
-  
+def prepare_vars(request, vars):
   vars_with_user = vars.copy()
   vars_with_user['user'] = get_user(request)
   
@@ -43,6 +41,13 @@ def render_template(request, template_name, vars = {}):
   vars_with_user['HELIOS_STATIC'] = '/static/helios/helios'
   vars_with_user['TEMPLATE_BASE'] = helios.TEMPLATE_BASE
   vars_with_user['CURRENT_URL'] = request.path
+  
+  return vars_with_user
+
+def render_template(request, template_name, vars = {}):
+  t = loader.get_template(template_name + '.html')
+  
+  vars_with_user = prepare_vars(request, vars)
   
   return render_to_response('helios/templates/%s.html' % template_name, vars_with_user)
   

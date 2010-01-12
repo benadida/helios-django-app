@@ -145,6 +145,22 @@ class EncryptedAnswer(object):
       
     return plaintexts
 
+  def verify_plaintexts_and_randomness(self, pk):
+    """
+    this applies only if the explicit answers and randomness factors are given
+    we do not verify the proofs here, that is the verify() method
+    """
+    if not hasattr(self, 'answer'):
+      return False
+    
+    for choice_num in range(len(self.choices)):
+      choice = self.choices[choice_num]
+      choice.pk = pk
+      
+      # redo the encryption
+      # WORK HERE (paste from below encryption)
+    
+    return False
     
   def verify(self, pk, min=0, max=1):
     possible_plaintexts = self.generate_plaintexts(pk)
