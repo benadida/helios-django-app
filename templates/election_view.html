@@ -214,9 +214,11 @@ Trustees:
 
 {% endif %}
 
-{% if election.result %}
+{% if election.voting_has_stopped %}
 <p style="font-size: 1.2em;">
+{% if election.result %}
 verify <a target="_blank" href="/verifier/verify.html?election_url={% url helios.views.one_election election.uuid %}">election tally</a>.
+{% endif %}
 
 review the <a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">voting booth</a>.
 </p>

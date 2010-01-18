@@ -541,9 +541,9 @@ HELIOS.Tally = Class.extend({
     
     return {
       num_tallied : this.num_tallied,
-      tally: tally_json_obj,
-    }
-  },
+      tally: tally_json_obj
+    };
+  }
   
 });
 

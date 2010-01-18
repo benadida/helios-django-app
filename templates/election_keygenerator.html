@@ -76,7 +76,10 @@ $(document).ready(function() {
 
 <span id="buttons"><button onclick="generate_keypair(); return false;" id="generate_button">Generate Election Keys</button></span>
 
-<span id="clear_button"><button onclick="clear_keys(); return false;">Clear Keys</button></span>
+<span id="clear_button">
+Your key has been generated, but you may choose to<br />clear it from memory and start from scratch if you prefer.<br />
+<button onclick="clear_keys(); return false;">Clear Keys</button>
+</span>
 
 <form id="sk_form">
 <h3>Your Secret Key</h3>
@@ -93,14 +96,16 @@ $(document).ready(function() {
 <form method="post" id="pk_form" action="{% url helios.views.trustee_upload_pk election.uuid, trustee.uuid %}">
 <h3>Your Public Key</h3>
 <p>
-    This is the public key that corresponds to the secret key you just copied to a safe place.
+    Now that you have copied your private key to a safe place, it's time to upload the public key to the server.
 </p>
 <p>
-    The fingerprint of this public key is: <tt id="pk_hash" style="font-size: 1.5em; font-weight: bold;"></tt>
+    The fingerprint of your public key is: <tt id="pk_hash" style="font-size: 1.5em; font-weight: bold;"></tt>.<br />
+    You may want to save this to confirm that your public key was properly stored by the server.<br />
+    (Your public key is not currently being displayed because you do not need to save it, the fingerprint is sufficient.)
 </p>
 <textarea id="pk_textarea" name="public_key_json" cols="80" rows="10" style="display:none;">
 </textarea>
-<input type="submit" value="upload your public key now">
+<input type="submit" value="Upload your public key">
 </form>
 
 <div id="applet_div"></div>

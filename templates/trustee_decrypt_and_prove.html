@@ -84,6 +84,7 @@ function do_tally() {
   
   $('#result_textarea').html(factors_and_proofs_json);
   $('#result_div').show();
+  $('#first-step-success').show();
 }
 
 function submit_result() {
@@ -98,14 +99,34 @@ function submit_result() {
       url: "./upload-decryption",
       data: {'factors_and_proofs': result},
       success: function(result) {
-          $('#waiting_submit_div').hide();
+        $('#waiting_submit_div').hide();
+        if (result != "FAILURE") {
           $('#done_div').show();
+        } else {
+          alert('verification failed, you probably used the wrong key.');
+          reset();
+        }
       },
       error: function(error) {
           $('#waiting_submit_div').hide();
           $('#error_div').show();
       }
   });
+}
+
+function skip_to_second_step() {
+  $('#sk_section').hide();
+  $('#result_div').show();
+  $('#result_textarea').html('');
+  $('#skip_to_second_step_instructions').hide();
+}
+
+function reset() {
+  $('#result_div').hide();
+  $('#skip_to_second_step_instructions').show();
+  $('#sk_section').show();
+  $('#result_textarea').html('');
+  $('#first-step-success').hide();
 }
 
 </script>
@@ -116,20 +137,32 @@ function submit_result() {
     <b>Public Key Fingerprint:</b> <tt>{{trustee.public_key_hash}}</tt>
     </p>
     <p>
-      The encrypted tally for your election has been computed. Now it's time to provide your secret key to compute your partial decryption.
-    </p>
-    
-    <p>
-      <b>Note</b>: this decryption will only be accepted if you provide the correct secret key.
+      The encrypted tally for your election has been computed.<br />
+      Now it's time to compute and submit your partial decryption.
     </p>
 
+    <p>
+      This process is performed in two steps.<br /><br />
+      <u>First</u>, your secret key is used to decrypt the tally <em>inside</em> your browser, without connecting to the network.<br />
+      You can choose to take your browser "offline" for this step, if you'd like.<br /><br />
+      <u>Second</u>, once your decryption factors have been computed, your browser will need to be "online" to submit them to the server.<br />
+      If you'd like, you can compute your decryption factors, copy them to your clipboard, restart your browser, and<br />
+      skip to the second step so that your browser is never online when you enter your secret key.
+    </p>
+    
   <div id="sk_section" style="display:none;">
+
       <form onsubmit="return false;">
-          This trustee's secret key:<br />
+          <h3>FIRST STEP: enter your secret key</h3>
           <textarea id="sk_textarea" cols="60" rows="5"></textarea>
       </form>
       <p id="tally_section">
-          <button onclick="do_tally();">Tally!</button>
+          <button onclick="do_tally();">Generate partial decryption</button>
+      </p>
+
+      <p id="skip_to_second_step_instructions">
+        <a href="javascript:skip_to_second_step();">skip to the second step</a><br />
+        (you need to have already computed your decryption factors.)
       </p>
   </div>
   
@@ -144,16 +177,20 @@ function submit_result() {
   </div>
   
   <div id="result_div">
-      <h3>Result</h3>
-      <p>
+      <h3>SECOND STEP: upload your partial decryption</h3>
+      <p id="first-step-success" style="display: none;">
           Your partial decryption factors and proofs have been generated below.<br />
           Your secret key has been cleared from memory.<br />
           When you're ready, you can submit this result to the server.
       </p>
+      Your partial decryption:<br />
       <form action="javascript:submit_result();">
-          <textarea id="result_textarea" cols="60" rows="5" wrap="soft"></textarea><br />
-          <input type="submit" value="submit" />
+          <textarea id="result_textarea" cols="60" rows="5" wrap="soft"></textarea><br /><br />
+          <input type="submit" value="Upload decryption factors to server" />
       </form>
+      <br />
+      <a href="javascript:reset()">reset and restart decryption process</a>
+      <br />
   </div>
   
   <div id="done_div">
