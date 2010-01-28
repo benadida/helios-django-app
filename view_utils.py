@@ -44,10 +44,13 @@ def prepare_vars(request, vars):
   
   return vars_with_user
 
-def render_template(request, template_name, vars = {}):
+def render_template(request, template_name, vars = {}, include_user=True):
   t = loader.get_template(template_name + '.html')
   
   vars_with_user = prepare_vars(request, vars)
+  
+  if not include_user:
+    del vars_with_user['user']
   
   return render_to_response('helios/templates/%s.html' % template_name, vars_with_user)
   

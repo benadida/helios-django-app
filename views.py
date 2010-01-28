@@ -411,7 +411,9 @@ def one_election_cast_done(request, election):
   #if logout:
   #  request.session.flush()
     
-  return render_template(request, 'cast_done', {'election': election, 'last_vote': votes[0], 'logout': logout})
+  # we suppress the user information because we're claiming logout, even though
+  # logout is happening asynchronously in an iframe to be modular given the logout mechanism
+  return render_template(request, 'cast_done', {'election': election, 'last_vote': votes[0], 'logout': logout}, include_user=False)
 
 @election_view()
 @json
@@ -633,7 +635,7 @@ def one_election_compute_tally(request, election):
 @trustee_check
 def trustee_decrypt_and_prove(request, election, trustee):
   if not _check_election_tally_type(election) or election.encrypted_tally == None:
-    return HttpResponseRedirect(reverse(one_election_view,args=[election.election_id]))
+    return HttpResponseRedirect(reverse(one_election_view,args=[election.uuid]))
     
   return render_template(request, 'trustee_decrypt_and_prove', {'election': election, 'trustee': trustee})
   

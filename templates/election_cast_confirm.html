@@ -58,12 +58,14 @@ function show_waiting() {
 <form method="post" action="" onsubmit="show_waiting()">
     <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
     
-    <input type="submit" value="cast this ballot" style="font-size: 1.5em;" /><br />
-    <span style="font-size:0.8em;"><br />You can cast as many ballots as you want,<br />only the last one counts.</span>
+    <input type="submit" value="cast this ballot" style="font-size: 1.5em;" />
+    <span style="font-size:0.8em;"><br />You can cast as many ballots as you want.<br />Only the last one counts.</span>
 </form>
 
 <p>
-    [<a href="{% url helios.views.one_election_view election.uuid %}">cancel</a>]
+    <button style="font-size: 1.5em;" onclick="document.location='./view';">cancel</button><br />
+    <span style="font-size:0.8em;">If you cancel now, your ballot will <em>NOT</em> be recorded.<br />
+    You can start the voting process over again, of course.</span>
 </p>
 
 </div>
