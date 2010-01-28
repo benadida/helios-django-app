@@ -15,25 +15,15 @@ function show_waiting() {
 <h1>{{election.name}} &mdash; Submit your Vote</h1>
 
 <p>
-    <b><em>HOLD ON!</em></b> You're not quite done yet.
-</p>
-
-<p>
-    Now that your ballot is encrypted, you need to log in so we can ensure you are eligible for this election,<br />
-    then cast your ballot so we can confirm it is properly formed.
-</p>
-
-<p>
-  We have received your encrypted ballot with tracking number:<br /><br />
+  We have received, <b><u>but not yet recorded</u></b>, your encrypted ballot with tracking number:<br /><br />
     <tt style="font-size:1.8em; font-weight: bold; padding-left: 20px;">  {{vote_fingerprint}}</tt>
 </p>
 
 {% if user %}
 <p>
-  You are logged in as: <br/>
-<span style="font-size: 1.4em;">
-    {{user.user_id}}</span><br />
-    (<a href="{% url auth.views.logout %}?return_url={{CURRENT_URL}}">switch user</a>)
+  You are logged in as 
+<span style="font-size: 1.4em; text-decoration:underline;">
+    {{user.user_id}}</span>.
 </p>
 
 {% if voter %}
@@ -50,7 +40,6 @@ function show_waiting() {
 <!--<em>no vote cast yet</em>-->
 {% endif %}
 
-<br />
 {% if election.voting_has_started %}
 {% if not election.voting_has_stopped %}
 <br />
@@ -58,7 +47,7 @@ function show_waiting() {
 <form method="post" action="" onsubmit="show_waiting()">
     <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
     
-    <input type="submit" value="cast this ballot" style="font-size: 1.5em;" />
+    <input type="submit" value="I am {{user.user_id}}, cast this ballot" style="font-size: 1.5em;" />
     <span style="font-size:0.8em;"><br />You can cast as many ballots as you want.<br />Only the last one counts.</span>
 </form>
 
@@ -97,12 +86,16 @@ function show_waiting() {
 {% endif %}
 
 {% else %}
+<p>
+  Now, we need you to log in, so we can verify your eligibility.
+</p>
+
 <br />
 <form method="get" action="{% url auth.views.index %}">
     <input type="hidden" name="return_url" value="{% url helios.views.one_election_cast_confirm election.uuid %}">
     <input type="submit" class="pretty" style="font-size: 1.6em;" value="Log In" />
 </form>
 <br />
-Don't worry, you can go log in without losing your ballot.
+Don't worry, we'll remember your ballot while you log in.
 {% endif %}
 {% endblock %}
