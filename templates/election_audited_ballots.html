@@ -21,7 +21,7 @@ Audited Ballots {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
 {% endif %}
 <table class="pretty">
 {% for b in audited_ballots %}
-<tr><td><tt style="font-size: 1.4em;">{{b.vote_hash}}</tt> [<a target="_blank" href="?vote_hash={{b.vote_hash}}">view</a>]</td></tr>
+<tr><td><tt style="font-size: 1.4em;">{{b.vote_hash}}</tt> [<a target="_blank" href="?vote_hash={{b.vote_hash|urlencode}}">view</a>]</td></tr>
 {% endfor %}
 </table>
 

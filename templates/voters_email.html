@@ -34,6 +34,11 @@ function batch_email() {
 
   <h2 class="title">{{election.name}} &mdash; Email Voters <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>]</span></h2>
   
+  <p>
+    The email will <b><u>automatically</u></b> include a "Dear Voter" line, as well as a footer including<br />
+    the election URL, the login information, and a simple email signature.<br />
+    No need to include these in the body of your email below.
+  </p>
   <form class="prettyform" action="javascript:batch_email();" method="POST" id="email_form">
     <table class="pretty">
      {{email_form.as_table}}
