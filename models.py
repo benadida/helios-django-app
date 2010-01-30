@@ -421,14 +421,37 @@ class CastVote(db.Model, electionalgs.CastVote):
     q.order('-cast_at')
     return [v for v in q]
     
-class OpenBallot(db.Model):
+class AuditedBallot(db.Model):
   """
   ballots for auditing
   """
   election = db.ReferenceProperty(Election)
-  vote = JSONProperty(electionalgs.EncryptedVote)
+  raw_vote = db.TextProperty()
   vote_hash = db.StringProperty(multiline=False)
   added_at = db.DateTimeProperty(auto_now_add=True)
+
+  @classmethod
+  def get(cls, election, vote_hash):
+    q = cls.all()
+    q.filter('election =', election)
+    q.filter('vote_hash =', vote_hash)
+    return q.fetch(1)[0]
+
+  @classmethod
+  def get_by_election(cls, election, after=None, limit=None):
+    q = cls.all()
+    q.filter('election =', election)
+    
+    q.order('vote_hash')
+      
+    # if we want the list after a certain UUID, add the inequality here
+    if after:
+      q.filter('vote_hash >' , after)
+    
+    if limit:
+      return [v for v in q.fetch(limit)]
+    else:
+      return [v for v in q]
     
 class Trustee(db.Model, electionalgs.Trustee):
   election = db.ReferenceProperty(Election)

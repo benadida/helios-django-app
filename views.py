@@ -302,7 +302,18 @@ def trustee_upload_pk(request, election, trustee):
     
   return HttpResponseRedirect(reverse(trustee_home, args=[election.uuid, trustee.uuid]))
     
-  
+@election_view(frozen=True)
+def post_audited_ballot(request, election):
+  if request.method == "POST":
+    raw_vote = request.POST['audited_ballot']
+    encrypted_vote = electionalgs.EncryptedVote.fromJSONDict(utils.from_json(raw_vote))
+    vote_hash = encrypted_vote.get_hash()
+    audited_ballot = AuditedBallot(raw_vote = raw_vote, vote_hash = vote_hash, election = election)
+    audited_ballot.put()
+    
+    return SUCCESS
+    
+
 @election_view(frozen=True)
 def one_election_cast(request, election):
   """
@@ -458,7 +469,33 @@ def one_election_bboard(request, election):
   return render_template(request, 'election_bboard', {'election': election, 'voters': voters, 'next_after': next_after,
                 'offset': offset, 'limit': limit, 'offset_plus_one': offset+1, 'offset_plus_limit': offset+limit,
                 'voter_id': request.GET.get('voter_id', '')})
+
+@election_view(frozen=True)
+def one_election_audited_ballots(request, election):
+  """
+  UI to show election audited ballots
+  """
+  
+  if request.GET.has_key('vote_hash'):
+    b = AuditedBallot.get(election, request.GET['vote_hash'])
+    return HttpResponse(b.raw_vote, mimetype="text/plain")
     
+  after = request.GET.get('after', None)
+  offset= int(request.GET.get('offset', 0))
+  limit = int(request.GET.get('limit', 50))
+  
+  audited_ballots = AuditedBallot.get_by_election(election, after=after, limit=limit+1)
+    
+  more_p = len(audited_ballots) > limit
+  if more_p:
+    audited_ballots = audited_ballots[0:limit]
+    next_after = audited_ballots[limit-1].vote_hash
+  else:
+    next_after = None
+    
+  return render_template(request, 'election_audited_ballots', {'election': election, 'audited_ballots': audited_ballots, 'next_after': next_after,
+                'offset': offset, 'limit': limit, 'offset_plus_one': offset+1, 'offset_plus_limit': offset+limit})
+
 @election_admin(frozen=False)
 def voter_delete(request, election, voter_uuid):
   voter = Voter.get_by_election_and_uuid(election, voter_uuid)

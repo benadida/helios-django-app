@@ -33,6 +33,7 @@ urlpatterns = patterns('',
     (r'^/result$', one_election_result),
     (r'^/result_proof$', one_election_result_proof),
     (r'^/bboard$', one_election_bboard),
+    (r'^/audited-ballots/$', one_election_audited_ballots),
 
     # construct election
     (r'^/build$', one_election_build),
@@ -50,6 +51,9 @@ urlpatterns = patterns('',
     (r'^/cast$', one_election_cast),
     (r'^/cast_confirm$', one_election_cast_confirm),
     (r'^/cast_done$', one_election_cast_done),
+    
+    # post audited ballot
+    (r'^/post-audited-ballot', post_audited_ballot),
     
     # managing voters
     (r'^/voters/$', voter_list),

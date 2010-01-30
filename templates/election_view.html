@@ -195,7 +195,8 @@ For your privacy, you'll be asked to log in only once your ballot is encrypted.
 {% endif %}
 
 <p style="font-size: 1.3em;">
-<a href="{% url helios.views.one_election_bboard election.uuid %}">Ballot Tracking Center</a>
+<a href="{% url helios.views.one_election_bboard election.uuid %}">Ballot Tracking Center</a> &nbsp;| &nbsp;
+<a href="{% url helios.views.one_election_audited_ballots election.uuid %}">Audited Ballots</a>
 </p>
 
 <p>
