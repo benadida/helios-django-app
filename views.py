@@ -300,6 +300,9 @@ def trustee_upload_pk(request, election, trustee):
 
     trustee.put()
     
+    # send a note to admin
+    election.admin.send_message("%s - trustee pk upload" % election.name, "trustee %s (%s) uploaded a pk." % (trustee.name, trustee.email))
+    
   return HttpResponseRedirect(reverse(trustee_home, args=[election.uuid, trustee.uuid]))
     
 @election_view(frozen=True)
@@ -691,6 +694,10 @@ def trustee_upload_decryption(request, election, trustee_uuid):
   
   if trustee.verify_decryption_proofs():
     trustee.save()
+    
+    # send a note to admin
+    election.admin.send_message("%s - trustee partial decryption" % election.name, "trustee %s (%s) did their partial decryption." % (trustee.name, trustee.email))
+    
     return SUCCESS
   else:
     return FAILURE
@@ -811,10 +818,7 @@ def voters_email(request, election):
       # go through a subset of the voters
       voters = Voter.get_by_election(election, order_by='voter_id', limit=limit, after=after)
       
-      for voter in voters:
-        if voter.voter_type != 'password':
-          continue
-        
+      for voter in voters:        
         user = voter.user
         body = """
 Dear %s,
@@ -843,7 +847,8 @@ name, or email address to the public. Instead, the bulletin board will only disp
 Helios
 """
 
-        send_mail(email_form.cleaned_data['subject'], body, settings.SERVER_EMAIL, ["%s <%s>" % (user.info.get('name', user.info['email']), user.info['email'])], fail_silently=False)
+        # this is email for most users
+        user.send_message(email_form.cleaned_data['subject'], body)
       
       # now a batch process, will just return OK
       #return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
