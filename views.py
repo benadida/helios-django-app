@@ -849,7 +849,7 @@ Helios
       #return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
       return_value = ""
       if len(voters) > 0:
-        return_value = voters[-1].voter_id
+        return_value = simplejson.dumps({'last_voter_id': voters[-1].voter_id, 'num_emailed': len(voters)})
       return HttpResponse(return_value)
     
   return render_template(request, "voters_email", {'email_form': email_form, 'election': election})    
