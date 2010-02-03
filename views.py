@@ -560,7 +560,7 @@ def _register_voter(election, user):
     return None
     
   voter_uuid = str(uuid.uuid1())
-  voter = Voter(uuid= voter_uuid, voter_type = user.user_type, voter_id = user.user_id, election = election)
+  voter = Voter(uuid= voter_uuid, voter_type = user.user_type, voter_id = user.user_id, election = election, name = user.name)
   
   voter.put()
   return voter

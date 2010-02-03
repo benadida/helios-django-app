@@ -36,7 +36,7 @@ Name
 {% if election.use_voter_aliases %}
 {{voter.alias}}
 {% else %}
-{{voter.voter_id}}
+{{voter.name}} ({{voter.voter_id}})
 {% endif %}</td><td><tt style="font-size: 16pt;">{% if voter.vote_hash %}{{voter.vote_hash}}{% else %}&mdash;{% endif %}</tt></td></tr>
 {% endfor %}
 </table>

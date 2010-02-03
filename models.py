@@ -163,7 +163,7 @@ class Election(db.Model, electionalgs.Election):
       return False
     
     if self.eligibility == None:
-      return False
+      return True
       
     # is the user eligible for one of these cases?
     for eligibility_case in self.eligibility:
