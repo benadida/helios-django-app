@@ -15,7 +15,7 @@ BigInt = Class.extend({
     if (value == null) {
       throw "null value!";
     }
-      
+    
     if (BigInt.use_applet) {
       this._java_bigint = BigInt.APPLET.newBigInteger(value, radix);
     } else {
@@ -106,13 +106,6 @@ function check_applet() {
   /* Decide whether we need the helper applet or not */
   var use_applet = BigInt.is_ie || (!is_ns4 && navigator.platform.substr(0, 5) == "Linux") || str_workaround || typeof(java) == 'undefined';
 
-  if(!navigator.javaEnabled()) {
-    alert("Java support required for Helios");
-  }
-  
-  // HACK
-  // use_applet = true;
-  
   // add the applet
   if (use_applet) {
     var applet_base = '/static/helios/helios/';
@@ -128,7 +121,6 @@ function check_applet() {
 // Set up the pointer to the applet if necessary, and some
 // basic Big Ints that everyone needs (0, 1, 2, and 42)
 BigInt._setup = function() {
-  //alert('setup!');
   if (BigInt.use_applet) {
       BigInt.APPLET = document.applets["bigint"];
   }
@@ -142,6 +134,23 @@ BigInt._setup = function() {
     BigInt.ready_p = true;
   } catch (e) {
     // not ready
+    // count how many times we've tried
+    if (this.num_invocations == null)
+      this.num_invocations = 0;
+
+    this.num_invocations += 1;
+
+    if (this.num_invocations > 5) {
+      if (BigInt.setup_interval)
+        window.clearInterval(BigInt.setup_interval);
+      
+      if (BigInt.setup_fail) {
+        BigInt.setup_fail();
+      } else {
+        alert('bigint failed!');
+      }
+    }
+    return;
   }
   
   if (BigInt.setup_interval)
@@ -151,9 +160,12 @@ BigInt._setup = function() {
     BigInt.setup_callback();
 };
 
-BigInt.setup = function(callback) {
+BigInt.setup = function(callback, fail_callback) {
   if (callback)
     BigInt.setup_callback = callback;
+  
+  if (fail_callback)
+    BigInt.setup_fail = fail_callback;
   
   BigInt.setup_interval = window.setInterval("BigInt._setup()", 1000);
 }

@@ -830,7 +830,8 @@ Dear %s,
 Election URL:  %s
 Election Fingerprint:  %s
 Your username: %s
-Your password: %s""" % (get_election_url(election), election.hash, user.user_id, user.info['password'])
+Your password: %s
+""" % (get_election_url(election), election.hash, user.user_id, user.info['password'])
 
         if election.use_voter_aliases:
           body+= """
