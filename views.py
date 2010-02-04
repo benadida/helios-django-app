@@ -837,9 +837,12 @@ Your password: %s
           body+= """
 Your voter alias: %s
 
-In order to protect your privacy, this election is configured to never display your username,
-name, or email address to the public. Instead, the bulletin board will only display your alias.
+In order to protect your privacy, this election is configured
+to never display your username, name, or email address to the public.
+Instead, the ballot tracking center will only display your alias.
 
+IMPORTANTLY, when you are prompted to log in to vote,
+please use your *username*, not your alias.
 """ % voter.alias
 
         body += """
