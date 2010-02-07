@@ -21,6 +21,7 @@ from crypto import utils as cryptoutils
 from helios import utils as helios_utils
 from view_utils import *
 from auth.security import *
+from auth import views as auth_views
 
 from security import *
 from auth.security import get_user
@@ -383,7 +384,9 @@ def one_election_cast_confirm(request, election):
     else:
       issues = None
 
-    return render_template(request, 'election_cast_confirm', {'election' : election, 'vote_fingerprint': vote_fingerprint, 'past_votes': past_votes, 'issues': issues, 'voter' : voter})
+    return_url = reverse(one_election_cast_confirm, args=[election.uuid])
+    login_box = auth_views.login_box_raw(request, return_url=return_url)
+    return render_template(request, 'election_cast_confirm', {'login_box': login_box, 'election' : election, 'vote_fingerprint': vote_fingerprint, 'past_votes': past_votes, 'issues': issues, 'voter' : voter})
       
   if request.method == "POST":
     check_csrf(request)
