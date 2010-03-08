@@ -49,6 +49,7 @@ voting has not yet started
 <li> <a href="{% url helios.views.one_election_freeze election.uuid %}"><em>freeze</em> ballot and<br />open election for voting.</a></li>
 {% else %}
 
+<li> <a href="{% url helios.views.voters_manage election.uuid %}">view/search voters</a></li>
 {% if election.encrypted_tally %}
 
 {% if election.result %}

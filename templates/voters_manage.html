@@ -3,6 +3,8 @@
 {% block content %}
   <h2 class="title">{{election.name}} &mdash; Manage Voters <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>]</span></h2>
 
+<form method="get" action="{% url helios.views.voters_search election.uuid %}"><b>search</b>: <input type="text" name="q" /> <input type="submit" value="search" /></form>
+
 {% if upload_p %}
 <p><a href="{% url helios.views.voters_upload election_uuid=election.uuid %}">bulk upload voters</a></p>
 {% endif %}

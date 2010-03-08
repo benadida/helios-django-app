@@ -4,6 +4,11 @@
 <script>
 var BATCH_SIZE = 25;
 
+var voter_id = null;
+{% if voter %}
+voter_id = '{{voter.voter_id}}';
+{% endif %}
+
 function iterate_batches(subject, body, after, limit) {
   var params = {'limit' : BATCH_SIZE, 'subject': subject, 'body': body};
   if (after)
@@ -31,16 +36,36 @@ function batch_email() {
   var form = $('#email_form')[0];
   iterate_batches(form.subject.value, form.body.value, 0, BATCH_SIZE);
 }
+
+function send_email() {
+  if (voter_id) {
+    var form = $('#email_form')[0];
+
+    var params = {'subject': form.subject.value, 'body': form.body.value, 'voter_id': voter_id};
+    $.post('./email', params, function(result) {
+      $('#processing').append("emailed {{voter.voter_id}} <br />");
+      $('#done').show();
+    });
+  } else {
+    batch_email();
+  }
+}
 </script>
 
   <h2 class="title">{{election.name}} &mdash; Email Voters <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>]</span></h2>
-  
+
+{% if voter %}  
+  <p>
+    You are sending this email to a specific user: <b>{{voter.name}} ({{voter.voter_id}})</b>
+  </p>
+{% endif %}
+
   <p>
     The email will <b><u>automatically</u></b> include a "Dear Voter" line, as well as a footer including<br />
     the election URL, the login information, and a simple email signature.<br />
     No need to include these in the body of your email below.
   </p>
-  <form class="prettyform" action="javascript:batch_email();" method="POST" id="email_form">
+  <form class="prettyform" action="javascript:send_email();" method="POST" id="email_form">
     <table class="pretty">
      {{email_form.as_table}}
      </table>

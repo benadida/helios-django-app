@@ -750,6 +750,33 @@ def voters_manage(request, election):
   return render_template(request, 'voters_manage', {'election': election, 'voters': voters, 'next_after': next_after,
                 'offset': offset, 'limit': limit, 'offset_plus_one': offset+1, 'offset_plus_limit': offset+min(limit,len(voters)), 'upload_p': helios.VOTERS_UPLOAD})
 
+@election_admin()
+def voters_search(request, election):
+  """
+  Search the voters by voter_id
+  """
+  search_term = request.GET.get('q', None)
+  if not search_term:
+    raise Exception("must provide a search term")
+  
+  voter = Voter.get_by_election_and_voter_id(election, voter_id=search_term)
+  return render_template(request, 'voters_search', {'election': election, 'voter': voter, 'search_term': search_term})
+
+##
+## UTF8 craziness for CSV
+##
+
+def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
+    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
+    csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
+                            dialect=dialect, **kwargs)
+    for row in csv_reader:
+        # decode UTF-8 back to Unicode, cell by cell:
+        yield [unicode(cell, 'utf-8') for cell in row]
+
+def utf_8_encoder(unicode_csv_data):
+    for line in unicode_csv_data:
+        yield line.encode('utf-8')
   
 @election_admin(frozen=False)
 def voters_upload(request, election):
@@ -764,7 +791,7 @@ def voters_upload(request, election):
     
   if request.method == "POST":
     voters_csv_lines = request.POST['voters_csv'].split("\n")
-    reader = csv.reader(voters_csv_lines)
+    reader = unicode_csv_reader(voters_csv_lines)
 
     for voter in reader:
 
@@ -801,7 +828,10 @@ def voters_upload(request, election):
 def voters_email(request, election):
   if not helios.VOTERS_EMAIL:
     return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
-    
+  
+  voter_id = request.REQUEST.get('voter_id', None)
+  voter = Voter.get_by_election_and_voter_id(election, voter_id)
+  
   if request.method == "GET":
     email_form = forms.EmailVotersForm()
   else:
@@ -815,8 +845,12 @@ def voters_email(request, election):
       if request.POST.has_key('after'):
         after = request.POST['after']
 
-      # go through a subset of the voters
-      voters = Voter.get_by_election(election, order_by='voter_id', limit=limit, after=after)
+      # the client knows to submit only once with a specific voter_id
+      if voter:
+        voters = [voter]
+      else:
+        # go through a subset of the voters
+        voters = Voter.get_by_election(election, order_by='voter_id', limit=limit, after=after)
       
       for voter in voters:        
         user = voter.user
@@ -861,7 +895,7 @@ Helios
         return_value = simplejson.dumps({'last_voter_id': voters[-1].voter_id, 'num_emailed': len(voters)})
       return HttpResponse(return_value)
     
-  return render_template(request, "voters_email", {'email_form': email_form, 'election': election})    
+  return render_template(request, "voters_email", {'email_form': email_form, 'election': election, 'voter': voter})    
 
 # Individual Voters
 @election_view()

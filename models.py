@@ -318,6 +318,18 @@ class Voter(db.Model, electionalgs.Voter):
       after = new_voters[-1].voter_id
     
     return voters
+
+  @classmethod
+  def get_by_election_and_voter_id(cls, election, voter_id):
+    q = cls.all()
+    q.filter('election = ', election)
+    q.filter('voter_id = ', voter_id)
+
+    lst = q.fetch(1)
+    if len(lst) > 0:
+      return lst[0]
+    else:
+      return None
     
   @classmethod
   def get_by_election_and_user(cls, election, user):
