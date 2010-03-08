@@ -18,3 +18,4 @@ class ElectionForm(forms.Form):
 class EmailVotersForm(forms.Form):
   subject = forms.CharField(max_length=80)
   body = forms.CharField(max_length=2000, widget=forms.Textarea)
+
