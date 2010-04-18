@@ -243,7 +243,12 @@ verify <a target="_blank" href="/verifier/verify.html?election_url={% url helios
 review the <a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">voting booth</a>.
 </p>
 
+{% else %}
+<p style="font-size: 1.1em;">
+  <a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">preview booth</a>
+</p>
 {% endif %}
+
 </div>
 </div>
 
