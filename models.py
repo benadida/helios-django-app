@@ -105,7 +105,7 @@ class Election(db.Model, electionalgs.Election):
 
   @classmethod
   def get_featured(cls):
-    query = cls.all().filter('featured_p = ', True)
+    query = cls.all().filter('featured_p = ', True).order('short_name')
     return [e for e in query]
     
   @classmethod
