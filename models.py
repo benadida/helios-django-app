@@ -6,13 +6,10 @@ Ben Adida
 (ben@adida.net)
 """
 
-from django.db.models import permalink, signals
-from google.appengine.ext import db
+from django.db import models
 
 from django.utils import simplejson
 import datetime, logging
-
-from google.appengine.api import datastore_types
 
 from crypto import electionalgs, algs, utils
 
@@ -24,39 +21,30 @@ import helios
 import counters
 
 # useful stuff in auth
-from auth.models import JSONProperty, User, AUTH_SYSTEMS
+from auth.models import User, AUTH_SYSTEMS
+from auth.jsonfield import JSONField
   
 # global counters
 GLOBAL_COUNTER_VOTERS = 'global_counter_voters'
 GLOBAL_COUNTER_CAST_VOTES = 'global_counter_cast_votes'
 GLOBAL_COUNTER_ELECTIONS = 'global_counter_elections'
 
-# a counter incrementing function that is meant to run in a transaction
-def __increment_counter(key, counter_name, amount):
-  obj = db.get(key)
-  new_value = getattr(obj, counter_name) + amount
-  setattr(obj, counter_name, new_value)
-  obj.put()
-  return new_value
+class Election(models.Model, electionalgs.Election):
+  admin = models.ForeignKey(User)
   
-def increment_counter(key, counter_name, amount = 1):
-  return db.run_in_transaction(__increment_counter, key, counter_name, amount)
+  uuid = models.CharField(max_length=50, null=False)
   
-class Election(db.Model, electionalgs.Election):
-  admin = db.ReferenceProperty(User)
+  short_name = models.CharField(max_length=100)
+  name = models.CharField(max_length=250)
   
-  uuid = db.StringProperty(multiline=False)
-  
-  short_name = db.StringProperty(multiline=False)
-  name = db.StringProperty(multiline=False)
-  description = db.TextProperty()
-  public_key = JSONProperty(algs.EGPublicKey)
-  private_key = JSONProperty(algs.EGSecretKey)
-  questions = JSONProperty()
+  description = models.TextField()
+  public_key = JSONField(algs.EGPublicKey)
+  private_key = JSONField(algs.EGSecretKey)
+  questions = JSONField()
   
   # eligibility is a JSON field, which lists auth_systems and eligibility details for that auth_system, e.g.
   # [{'auth_system': 'cas', 'constraint': [{'year': 'u12'}, {'year':'u13'}]}, {'auth_system' : 'password'}, {'auth_system' : 'openid', 'constraint': [{'host':'http://myopenid.com'}]}]
-  eligibility = JSONProperty()
+  eligibility = JSONField()
 
   # types of ballot and tally
   # REMOVED 2009-11-19, we do choice_type and tally_type in the questions now
@@ -66,67 +54,58 @@ class Election(db.Model, electionalgs.Election):
   # open registration?
   # this is now used to indicate the state of registration,
   # whether or not the election is frozen
-  openreg = db.BooleanProperty(default=False)
+  openreg = models.BooleanField(default=False)
   
   # featured election?
-  featured_p = db.BooleanProperty(default=False)
+  featured_p = models.BooleanField(default=False)
     
   # voter aliases?
-  use_voter_aliases = db.BooleanProperty(default=False)
+  use_voter_aliases = models.BooleanField(default=False)
   
   # where votes should be cast
-  cast_url = db.StringProperty(multiline=False)
+  cast_url = models.CharField(max_length = 500)
   
   # dates at which things happen for the election
-  frozen_at = db.DateTimeProperty(auto_now_add=False)
-  archived_at = db.DateTimeProperty(auto_now_add=False, default=None)
+  frozen_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
+  archived_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
   
   # dates to open up voting
   # these are always UTC
-  voting_starts_at = db.DateTimeProperty(auto_now_add=False, default=None)
-  voting_ends_at = db.DateTimeProperty(auto_now_add=False, default=None)
+  voting_starts_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
+  voting_ends_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
 
   # the hash of all voters (stored for large numbers)
-  voters_hash = db.StringProperty(multiline=False)
+  voters_hash = models.CharField(max_length=100)
   
   # encrypted tally, each a JSON string
   # used only for homomorphic tallies
-  encrypted_tally = JSONProperty(electionalgs.Tally)
+  encrypted_tally = JSONField(electionalgs.Tally)
 
   # results of the election
-  result = JSONProperty()
+  result = JSONField()
 
   # decryption proof, a JSON object
-  result_proof = JSONProperty()
+  result_proof = JSONField()
   
   # keep a bunch of counts
-  num_voters = db.IntegerProperty(default = 0)
-  num_cast_votes = db.IntegerProperty(default = 0)
+  num_voters = models.IntegerField(default = 0)
+  num_cast_votes = models.IntegerField(default = 0)
 
   @classmethod
   def get_featured(cls):
-    query = cls.all().filter('featured_p = ', True).order('short_name')
-    return [e for e in query]
+    query = cls.objects.filter(featured_p = True).order('short_name')
+    return query
     
   @classmethod
   def get_or_create(cls, **kwargs):
-    key_name = kwargs['short_name']
-    obj = cls.get_by_key_name(key_name)
-    created_p = False
-    if not obj:
-      created_p = True
-      obj = cls(key_name = key_name, **kwargs)
-      obj.put()
-    return obj, created_p
+    return cls.get_or_create(short_name = kwargs['short_name'], default=kwargs)
 
   @classmethod
   def get_by_user_as_admin(cls, user, include_archived=False):
-    query = cls.all()
-    query.filter('admin =', user)
+    query = cls.objects.filter(admin = user)
     if include_archived:
-      query.filter('archived_at =', None)
-
-    return [e for e in query]
+      query = query.filter('archived_at', None)
+    return query
     
   @classmethod
   def get_by_user_as_voter(cls, user):
@@ -134,24 +113,16 @@ class Election(db.Model, electionalgs.Election):
     
   @classmethod
   def get_by_uuid(cls, uuid):
-    query = cls.all()
-    query.filter('uuid = ', uuid)
-    elections = query.fetch(1)
-    
-    if len(elections) > 0:
-      return elections[0]
-    else:
+    try:
+      return cls.objects.get(uuid=uuid)
+    except cls.DoesNotExist:
       return None
   
   @classmethod
   def get_by_short_name(cls, short_name):
-    query = cls.all()
-    query.filter('short_name = ', short_name)
-    elections = query.fetch(1)
-    
-    if len(elections) > 0:
-      return elections[0]
-    else:
+    try:
+      return cls.objects.get(short_name=short_name)
+    except cls.DoesNotExist:
       return None
   
   def user_eligible_p(self, user):
@@ -212,34 +183,13 @@ class Election(db.Model, electionalgs.Election):
       self.voters_hash = utils.hash_b64(voters_json)
     
   def increment_voters(self):
-    # increment global counter
-    counters.increment(GLOBAL_COUNTER_VOTERS)
-
-    return increment_counter(self.key(), 'num_voters')
+    ## FIXME
+    return 0
     
   def increment_cast_votes(self):
-    # increment global counter
-    counters.increment(GLOBAL_COUNTER_CAST_VOTES)
-
-    return increment_counter(self.key(), 'num_cast_votes')
-    
-  def put(self, *args, **kwargs):
-    """
-    override this just to get a hook
-    """
-    # not saved yet?
-    increment_p = False
-    if not self.is_saved():
-      increment_p = True
-      
-    super(Election, self).put(*args, **kwargs)
-
-    ## TRANSACTION PROBLEM, we won't increment here
-    # do the increment afterwards in case of an exception which prevents the creation
-    #if increment_p:
-    #  counters.increment(GLOBAL_COUNTER_ELECTIONS)
-    
-    
+    ## FIXME
+    return 0
+        
   def freeze(self):
     self.frozen_at = datetime.datetime.utcnow()
     
@@ -259,65 +209,57 @@ class Election(db.Model, electionalgs.Election):
   @property
   def url(self):
     return helios.get_election_url(self)
+
     
-class Voter(db.Model, electionalgs.Voter):
-  election = db.ReferenceProperty(Election)
+class Voter(models.Model, electionalgs.Voter):
+  election = models.ForeignKey(Election)
   
-  name = db.StringProperty(multiline=False)
-  voter_type = db.StringProperty(multiline=False)
-  voter_id = db.StringProperty(multiline=False)
-  uuid = db.StringProperty(multiline=False)
+  name = models.CharField(max_length = 200)
+  voter_type = models.CharField(max_length = 100)
+  voter_id = models.CharField(max_length = 100)
+  uuid = models.CharField(max_length = 50)
   
   # if election uses aliases
-  alias = db.StringProperty(multiline=False)
+  alias = models.CharField(max_length = 100, null=True)
   
   # we keep a copy here for easy tallying
-  vote = JSONProperty(electionalgs.EncryptedVote)
-  vote_hash = db.StringProperty(multiline=False)
-  cast_at = db.DateTimeProperty(auto_now_add=False)
+  vote = JSONField(electionalgs.EncryptedVote, null=True)
+  vote_hash = models.CharField(max_length = 100, null=True)
+  cast_at = models.DateTimeField(auto_now_add=False, null=True)
   
   @classmethod
   def get_by_election(cls, election, cast=None, order_by='voter_id', after=None, limit=None):
-    q = cls.all()
-    q.filter('election =', election)
+    query = cls.objects.filter(election = election)
     
     # the boolean check is not stupid, this is ternary logic
     # none means don't care if it's cast or not
     if cast == True:
-      q.filter('cast_at !=', None)
+      query = query.exclude(cast_at = None)
     elif cast == False:
-      q.filter('cast_at =', None)
+      query = query.filter(cast_at = None)
 
     # little trick to get around GAE limitation
     # order by uuid only when no inequality has been added
     if cast == None or order_by == 'cast_at' or order_by =='-cast_at':
-      q.order(order_by)
+      query = query.order(order_by)
       
       # if we want the list after a certain UUID, add the inequality here
       if after:
         if order_by[0] == '-':
-          q.filter('%s >' % order_by[1:], after)
+          field_name = "%s__gt" % order_by[1:]
         else:
-          q.filter('%s >' % order_by, after)
+          field_name = "%s__gt" % order_by
+        conditions = {field_name : after}
+        query = query.filter (**conditions)
     
     if limit:
-      return [v for v in q.fetch(limit)]
-    else:
-      return [v for v in q]
-
+      query = query.limit(limit)
+      
+    return query
+  
   @classmethod
   def get_all_by_election_in_chunks(cls, election, cast=None, chunk=100):
-    voters = []
-    after = None
-
-    while True:
-      new_voters = cls.get_by_election(election, cast=cast, after=after, limit=chunk)
-      if len(new_voters) == 0:
-        break
-      voters += new_voters
-      after = new_voters[-1].voter_id
-    
-    return voters
+    return cls.get_by_election(election)
 
   @classmethod
   def get_by_election_and_voter_id(cls, election, voter_id):
