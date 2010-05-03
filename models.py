@@ -17,9 +17,6 @@ from helios import utils as heliosutils
 
 import helios
 
-# counters
-import counters
-
 # useful stuff in auth
 from auth.models import User, AUTH_SYSTEMS
 from auth.jsonfield import JSONField
@@ -93,7 +90,7 @@ class Election(models.Model, electionalgs.Election):
 
   @classmethod
   def get_featured(cls):
-    query = cls.objects.filter(featured_p = True).order('short_name')
+    query = cls.objects.filter(featured_p = True).order_by('short_name')
     return query
     
   @classmethod
@@ -241,7 +238,7 @@ class Voter(models.Model, electionalgs.Voter):
     # little trick to get around GAE limitation
     # order by uuid only when no inequality has been added
     if cast == None or order_by == 'cast_at' or order_by =='-cast_at':
-      query = query.order(order_by)
+      query = query.order_by(order_by)
       
       # if we want the list after a certain UUID, add the inequality here
       if after:
@@ -263,49 +260,35 @@ class Voter(models.Model, electionalgs.Voter):
 
   @classmethod
   def get_by_election_and_voter_id(cls, election, voter_id):
-    q = cls.all()
-    q.filter('election = ', election)
-    q.filter('voter_id = ', voter_id)
+    query = cls.objects.filter(election = election, voter_id = voter_id)
 
-    lst = q.fetch(1)
-    if len(lst) > 0:
-      return lst[0]
-    else:
+    try:
+      return query[0]
+    except:
       return None
     
   @classmethod
   def get_by_election_and_user(cls, election, user):
-    q = cls.all()
-    q.filter('election = ', election)
-    q.filter('voter_type = ', user.user_type)
-    q.filter('voter_id = ', user.user_id)
+    query = cls.objects.filter(election = election, voter_id = user.user_id, voter_type= user.user_type)
 
-    lst = q.fetch(1)
-    if len(lst) > 0:
-      return lst[0]
-    else:
+    try:
+      return query[0]
+    except:
       return None
       
   @classmethod
   def get_by_election_and_uuid(cls, election, uuid):
-    q = cls.all()
-    q.filter('election = ', election)
-    q.filter('uuid = ', uuid)
+    query = cls.objects.filter(election = election, uuid = uuid)
 
-    lst = q.fetch(1)
-    if len(lst) > 0:
-      return lst[0]
-    else:
+    try:
+      return query[0]
+    except:
       return None
-  
+
   @classmethod
   def get_by_user(cls, user):
-    q = cls.all()
-    q.filter('voter_type = ', user.user_type)
-    q.filter('voter_id = ', user.user_id)
+    return cls.objects.filter(voter_type = user.user_type, voter_id = user.user_id)
 
-    return [v for v in q]
-  
   @property
   def user(self):
     return User.get_by_type_and_id(self.voter_type, self.voter_id)
@@ -314,30 +297,8 @@ class Voter(models.Model, electionalgs.Voter):
   def election_uuid(self):
     return self.election.uuid
   
-  def put(self, *args, **kwargs):
-    """
-    override this just to get a hook
-    """
-    # not saved yet?
-    increment_p = False
-    if not self.is_saved():
-      increment_p = True
-      
-    super(Voter, self).put(*args, **kwargs)
-
-    # do the increment afterwards in case of an exception which prevents the creation
-    if increment_p:
-      new_num_voters = self.election.increment_voters()
-      if self.election.use_voter_aliases:
-        self.alias = 'V' + str(new_num_voters)
-        # recursive only once, at least it should be
-        self.save()
-
   def store_vote(self, cast_vote):
     cast_vote.save()
-
-    if self.cast_at == None:
-      self.election.increment_cast_votes()
 
     self.vote = cast_vote.vote
     self.vote_hash = cast_vote.vote_hash
@@ -348,17 +309,17 @@ class Voter(models.Model, electionalgs.Voter):
     return CastVote(vote = self.vote, vote_hash = self.vote_hash, cast_at = self.cast_at, voter=self)
     
   
-class CastVote(db.Model, electionalgs.CastVote):
+class CastVote(models.Model, electionalgs.CastVote):
   # the reference to the voter provides the voter_uuid
-  voter = db.ReferenceProperty(Voter)
+  voter = models.ForeignKey(Voter)
   
   # a json array, which should contain election_uuid and election_hash
-  vote = JSONProperty(electionalgs.EncryptedVote)
+  vote = JSONField(electionalgs.EncryptedVote)
 
   # cache the hash of the vote
-  vote_hash = db.StringProperty(multiline=False)
+  vote_hash = models.CharField(max_length=100)
 
-  cast_at = db.DateTimeProperty(auto_now_add=True)  
+  cast_at = models.DateTimeField(auto_now_add=True)  
   
   @property
   def voter_uuid(self):
@@ -370,63 +331,54 @@ class CastVote(db.Model, electionalgs.CastVote):
   
   @classmethod
   def get_by_election_and_voter(cls, election, voter):
-    q = cls.all()
-    q.filter('voter = ', voter)
-    q.order('-cast_at')
-    return [v for v in q]
+    return cls.objects.filter(voter = voter, election = election).order_by('-cast_at')
     
-class AuditedBallot(db.Model):
+class AuditedBallot(models.Model):
   """
   ballots for auditing
   """
-  election = db.ReferenceProperty(Election)
-  raw_vote = db.TextProperty()
-  vote_hash = db.StringProperty(multiline=False)
-  added_at = db.DateTimeProperty(auto_now_add=True)
+  election = models.ForeignKey(Election)
+  raw_vote = models.TextField()
+  vote_hash = models.CharField(max_length=100)
+  added_at = models.DateTimeField(auto_now_add=True)
 
   @classmethod
   def get(cls, election, vote_hash):
-    q = cls.all()
-    q.filter('election =', election)
-    q.filter('vote_hash =', vote_hash)
-    return q.fetch(1)[0]
+    return cls.objects.get(election = election, vote_hash = vote_hash)
 
   @classmethod
   def get_by_election(cls, election, after=None, limit=None):
-    q = cls.all()
-    q.filter('election =', election)
-    
-    q.order('vote_hash')
-      
+    query = cls.objects.get(election = election).order_by('vote_hash')
+
     # if we want the list after a certain UUID, add the inequality here
     if after:
-      q.filter('vote_hash >' , after)
-    
+      query = query.filter(vote_hash__gt = after)
+
     if limit:
-      return [v for v in q.fetch(limit)]
-    else:
-      return [v for v in q]
+      query = query.limit(limit)
+
+    return query
     
-class Trustee(db.Model, electionalgs.Trustee):
-  election = db.ReferenceProperty(Election)
+class Trustee(models.Model, electionalgs.Trustee):
+  election = models.ForeignKey(Election)
   
-  uuid = db.StringProperty(multiline=False)
-  name = db.StringProperty(multiline=False)
-  email = db.EmailProperty()
-  secret = db.StringProperty(multiline=False)
+  uuid = models.CharField(max_length=50)
+  name = models.CharField(max_length=200)
+  email = models.EmailField()
+  secret = models.CharField(max_length=100)
   
   # public key
-  public_key = JSONProperty(algs.EGPublicKey)
-  public_key_hash = db.StringProperty(multiline=False)
+  public_key = JSONField(algs.EGPublicKey, null=True)
+  public_key_hash = models.CharField(max_length=100)
   
   # proof of knowledge of secret key
-  pok = JSONProperty(algs.DLogProof)
+  pok = JSONField(algs.DLogProof, null=True)
   
   # decryption factors
-  decryption_factors = JSONProperty()
-  decryption_proofs = JSONProperty()
+  decryption_factors = JSONField(null=True)
+  decryption_proofs = JSONField(null=True)
   
-  def put(self, *args, **kwargs):
+  def save(self, *args, **kwargs):
     """
     override this just to get a hook
     """
@@ -434,34 +386,23 @@ class Trustee(db.Model, electionalgs.Trustee):
     if not self.secret:
       self.secret = heliosutils.random_string(12)
       
-    super(Trustee, self).put(*args, **kwargs)
+    super(Trustee, self).save(*args, **kwargs)
   
   @classmethod
   def get_by_election(cls, election):
-    q = cls.all()
-    q.filter('election =', election)
-    
-    return [t for t in q]
+    return cls.objects.filter(election = election)
 
   @classmethod
   def get_by_uuid(cls, uuid):
-    q = cls.all()
-    q.filter('uuid = ', uuid)
-    return q.fetch(1)[0]
+    return cls.objects.get(uuid = uuid)
     
   @classmethod
   def get_by_election_and_uuid(cls, election, uuid):
-    q = cls.all()
-    q.filter('election =', election)
-    q.filter('uuid = ', uuid)
-    return q.fetch(1)[0]
+    return cls.objects.get(election = election, uuid = uuid)
 
   @classmethod
   def get_by_election_and_email(cls, election, email):
-    q = cls.all()
-    q.filter('election =', election)
-    q.filter('email = ', email)
-    return q.fetch(1)[0]
+    return cls.objects.get(election = election, email = email)
     
   def verify_decryption_proofs(self):
     """

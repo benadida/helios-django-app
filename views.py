@@ -9,9 +9,6 @@ from django.core.urlresolvers import reverse
 from django.core.mail import send_mail
 from django.http import *
 
-from google.appengine.ext import db
-from google.appengine.api import memcache
-
 from mimetypes import guess_type
 
 import csv
@@ -27,7 +24,6 @@ from security import *
 from auth.security import get_user
 
 import uuid, datetime
-import counters
 
 from models import *
 
@@ -143,7 +139,6 @@ def election_new(request):
         election, created_p = Election.get_or_create(**election_params)
       
         if created_p:
-          counters.increment(GLOBAL_COUNTER_ELECTIONS)
           return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
         else:
           error = "An election with short name %s already exists" % election_params['short_name']
