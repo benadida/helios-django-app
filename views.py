@@ -233,7 +233,7 @@ def new_trustee(request, election):
     email = request.POST['email']
     
     trustee = Trustee(uuid = str(uuid.uuid1()), election = election, name=name, email=email)
-    trustee.put()
+    trustee.save()
     return HttpResponseRedirect(reverse(list_trustees_view, args=[election.uuid]))
   
 @election_admin()
@@ -271,7 +271,7 @@ Your trustee dashboard is at
 Helios  
 """ % (election.name, url)
 
-  send_mail('your trustee homepage for %s' % election.name, body, settings.SERVER_EMAIL, ["%s <%s>" % (trustee.name, trustee.email)], fail_silently=False)
+  send_mail('your trustee homepage for %s' % election.name, body, settings.SERVER_EMAIL, ["%s <%s>" % (trustee.name, trustee.email)], fail_silently=True)
 
   logging.info("URL %s " % url)
   return HttpResponseRedirect(reverse(list_trustees_view, args = [election.uuid]))
@@ -809,7 +809,7 @@ def voters_upload(request, election):
         
       # create the user
       user = User.update_or_create(user_type='password', user_id=voter_id, info = {'password': helios_utils.random_string(10), 'email': email, 'name': name})
-      user.put()
+      user.save()
       
       # does voter for this user already exist
       voter = Voter.get_by_election_and_user(election, user)
@@ -818,7 +818,7 @@ def voters_upload(request, election):
       if not voter:
         voter_uuid = str(uuid.uuid1())
         voter = Voter(uuid= voter_uuid, voter_type = 'password', voter_id = voter_id, name = name, election = election)
-        voter.put()
+        voter.save()
     
     return HttpResponse("OK")
 

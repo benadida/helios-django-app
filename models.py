@@ -35,13 +35,13 @@ class Election(models.Model, electionalgs.Election):
   name = models.CharField(max_length=250)
   
   description = models.TextField()
-  public_key = JSONField(algs.EGPublicKey)
-  private_key = JSONField(algs.EGSecretKey)
-  questions = JSONField()
+  public_key = JSONField(algs.EGPublicKey, null=True)
+  private_key = JSONField(algs.EGSecretKey, null=True)
+  questions = JSONField(null=True)
   
   # eligibility is a JSON field, which lists auth_systems and eligibility details for that auth_system, e.g.
   # [{'auth_system': 'cas', 'constraint': [{'year': 'u12'}, {'year':'u13'}]}, {'auth_system' : 'password'}, {'auth_system' : 'openid', 'constraint': [{'host':'http://myopenid.com'}]}]
-  eligibility = JSONField()
+  eligibility = JSONField(null=True)
 
   # types of ballot and tally
   # REMOVED 2009-11-19, we do choice_type and tally_type in the questions now
@@ -72,17 +72,17 @@ class Election(models.Model, electionalgs.Election):
   voting_ends_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
 
   # the hash of all voters (stored for large numbers)
-  voters_hash = models.CharField(max_length=100)
+  voters_hash = models.CharField(max_length=100, null=True)
   
   # encrypted tally, each a JSON string
   # used only for homomorphic tallies
-  encrypted_tally = JSONField(electionalgs.Tally)
+  encrypted_tally = JSONField(electionalgs.Tally, null=True)
 
   # results of the election
-  result = JSONField()
+  result = JSONField(null=True)
 
   # decryption proof, a JSON object
-  result_proof = JSONField()
+  result_proof = JSONField(null=True)
   
   # keep a bunch of counts
   num_voters = models.IntegerField(default = 0)
@@ -95,7 +95,7 @@ class Election(models.Model, electionalgs.Election):
     
   @classmethod
   def get_or_create(cls, **kwargs):
-    return cls.get_or_create(short_name = kwargs['short_name'], default=kwargs)
+    return cls.objects.get_or_create(short_name = kwargs['short_name'], defaults=kwargs)
 
   @classmethod
   def get_by_user_as_admin(cls, user, include_archived=False):
