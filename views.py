@@ -294,7 +294,7 @@ def trustee_upload_pk(request, election, trustee):
     
     trustee.public_key_hash = utils.hash_b64(utils.to_json(trustee.public_key.toJSONDict()))
 
-    trustee.put()
+    trustee.save()
     
     # send a note to admin
     election.admin.send_message("%s - trustee pk upload" % election.name, "trustee %s (%s) uploaded a pk." % (trustee.name, trustee.email))
