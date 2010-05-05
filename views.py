@@ -191,7 +191,7 @@ def one_election_view(request, election):
     
     if voter:
       # cast any votes?
-      votes = CastVote.get_by_election_and_voter(election, voter)
+      votes = CastVote.get_by_voter(voter)
     else:
       eligible_p = _check_eligibility(election, user)
       votes = None
@@ -308,7 +308,7 @@ def post_audited_ballot(request, election):
     encrypted_vote = electionalgs.EncryptedVote.fromJSONDict(utils.from_json(raw_vote))
     vote_hash = encrypted_vote.get_hash()
     audited_ballot = AuditedBallot(raw_vote = raw_vote, vote_hash = vote_hash, election = election)
-    audited_ballot.put()
+    audited_ballot.save()
     
     return SUCCESS
     
@@ -357,8 +357,7 @@ def one_election_cast_confirm(request, election):
       'vote' : electionalgs.EncryptedVote.fromJSONDict(utils.from_json(encrypted_vote)),
       'voter' : voter,
       'vote_hash': vote_fingerprint,
-      'cast_at': datetime.datetime.utcnow(),
-      'election': election
+      'cast_at': datetime.datetime.utcnow()
     }
 
     cast_vote = CastVote(**cast_vote_params)
@@ -367,7 +366,7 @@ def one_election_cast_confirm(request, election):
     
   if request.method == "GET":
     if voter:
-      past_votes = CastVote.get_by_election_and_voter(election, voter)
+      past_votes = CastVote.get_by_voter(voter)
       if len(past_votes) == 0:
         past_votes = None
     else:
@@ -416,7 +415,7 @@ def one_election_cast_confirm(request, election):
 def one_election_cast_done(request, election):
   user = get_user(request)
   voter = Voter.get_by_election_and_user(election, user)
-  votes = CastVote.get_by_election_and_voter(election, voter)
+  votes = CastVote.get_by_voter(voter)
 
   logout = settings.LOGOUT_ON_CONFIRMATION
   
@@ -560,7 +559,7 @@ def _register_voter(election, user):
   voter_uuid = str(uuid.uuid1())
   voter = Voter(uuid= voter_uuid, voter_type = user.user_type, voter_id = user.user_id, election = election, name = user.name)
   
-  voter.put()
+  voter.save()
   return voter
     
 @election_view()
@@ -922,7 +921,7 @@ def voter_votes(request, election, voter_uuid):
   all cast votes by a voter
   """
   voter = Voter.get_by_election_and_uuid(election, voter_uuid)
-  votes = CastVote.get_by_election_and_voter(election, voter)
+  votes = CastVote.get_by_voter(voter)
   return [v.toJSONDict()  for v in votes]
 
 @election_view()

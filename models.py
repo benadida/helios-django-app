@@ -211,7 +211,7 @@ class Election(models.Model, electionalgs.Election):
 class Voter(models.Model, electionalgs.Voter):
   election = models.ForeignKey(Election)
   
-  name = models.CharField(max_length = 200)
+  name = models.CharField(max_length = 200, null=True)
   voter_type = models.CharField(max_length = 100)
   voter_id = models.CharField(max_length = 100)
   uuid = models.CharField(max_length = 50)
@@ -250,7 +250,7 @@ class Voter(models.Model, electionalgs.Voter):
         query = query.filter (**conditions)
     
     if limit:
-      query = query.limit(limit)
+      query = query[:limit]
       
     return query
   
@@ -330,8 +330,8 @@ class CastVote(models.Model, electionalgs.CastVote):
     return self.voter.hash
   
   @classmethod
-  def get_by_election_and_voter(cls, election, voter):
-    return cls.objects.filter(voter = voter, election = election).order_by('-cast_at')
+  def get_by_voter(cls, voter):
+    return cls.objects.filter(voter = voter).order_by('-cast_at')
     
 class AuditedBallot(models.Model):
   """
