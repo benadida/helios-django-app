@@ -619,8 +619,7 @@ def _check_election_tally_type(election):
 @election_admin(frozen=True)
 def one_election_compute_tally(request, election):
   """
-  Tallying is done in chunks of 50 votes at a time, to ensure that it fits
-  within GAE computation limits.
+  tallying is done all at a time now
   """
   if not _check_election_tally_type(election):
     return HttpResponseRedirect(reverse(one_election_view,args=[election.election_id]))
@@ -642,11 +641,11 @@ def one_election_compute_tally(request, election):
   
   # if we have "after", then we should have the tally stored in memcache
   if after != None:
-    memcache_key = "TALLY-%s-%s" % (election.uuid, after)
-    tally = memcache.get(memcache_key)
+    tally_key = "TALLY-%s-%s" % (election.uuid, after)
+    tally = request.session[tally_key]
     if not tally:
       raise Exception("problem tallying, try again")
-    memcache.delete(memcache_key)
+    del request.session[tally_key]
   else:
     tally = election.init_tally()
   
@@ -657,9 +656,9 @@ def one_election_compute_tally(request, election):
     tally.add_vote_batch(votes, verify_p=False)
     
     # store in memcache
-    next_after = voters[-1].voter_id
-    memcache_key = "TALLY-%s-%s" % (election.uuid, next_after)
-    memcache.set(memcache_key, tally)
+    next_after = voters[len(voters)-1].voter_id
+    tally_key = "TALLY-%s-%s" % (election.uuid, next_after)
+    request.session[tally_key]= tally
     
     return HttpResponse(next_after)
   else:
