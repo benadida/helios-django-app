@@ -7,14 +7,13 @@ Ben Adida
 """
 
 from django.db import models
-
 from django.utils import simplejson
-import datetime, logging
+from django.conf import settings
+
+import datetime, logging, uuid
 
 from crypto import electionalgs, algs, utils
-
 from helios import utils as heliosutils
-
 import helios
 
 # useful stuff in auth
@@ -121,6 +120,14 @@ class Election(models.Model, electionalgs.Election):
       return cls.objects.get(short_name=short_name)
     except cls.DoesNotExist:
       return None
+
+  def add_voters_file(self, uploaded_file):
+    """
+    expects a django uploaded_file data structure, which has filename, content, size...
+    """
+    random_filename = str(uuid.uuid1())
+    new_voter_file = VoterFile(election = self)
+    new_voter_file.voter_file.save(random_filename, uploaded_file)
   
   def user_eligible_p(self, user):
     """
@@ -207,6 +214,19 @@ class Election(models.Model, electionalgs.Election):
   def url(self):
     return helios.get_election_url(self)
 
+class VoterFile(models.Model):
+  """
+  A model to store files that are lists of voters to be processed
+  """
+  # path where we store voter upload 
+  PATH = settings.VOTER_UPLOAD_REL_PATH
+
+  election = models.ForeignKey(Election)
+  voter_file = models.FileField(upload_to=PATH, max_length=250)
+  uploaded_at = models.DateTimeField(auto_now_add=True)
+  processing_started_at = models.DateTimeField(auto_now_add=False, null=True)
+  processing_finished_at = models.DateTimeField(auto_now_add=False, null=True)
+  num_voters = models.IntegerField(null=True)
     
 class Voter(models.Model, electionalgs.Voter):
   election = models.ForeignKey(Election)

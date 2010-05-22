@@ -758,22 +758,6 @@ def voters_search(request, election):
   voter = Voter.get_by_election_and_voter_id(election, voter_id=search_term)
   return render_template(request, 'voters_search', {'election': election, 'voter': voter, 'search_term': search_term})
 
-##
-## UTF8 craziness for CSV
-##
-
-def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
-    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
-    csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
-                            dialect=dialect, **kwargs)
-    for row in csv_reader:
-        # decode UTF-8 back to Unicode, cell by cell:
-        yield [unicode(cell, 'utf-8') for cell in row]
-
-def utf_8_encoder(unicode_csv_data):
-    for line in unicode_csv_data:
-        yield line.encode('utf-8')
-  
 @election_admin(frozen=False)
 def voters_upload(request, election):
   """
@@ -783,42 +767,14 @@ def voters_upload(request, election):
   name and email are needed only if voter_type is static
   """
   if request.method == "GET":
-    return render_template(request, 'voters_upload', {'election': election})
+    voter_files = election.voterfile_set.all()
+    return render_template(request, 'voters_upload', {'election': election, 'voter_files': voter_files})
     
   if request.method == "POST":
-    voters_csv_lines = request.POST['voters_csv'].split("\n")
-    reader = unicode_csv_reader(voters_csv_lines)
-
-    for voter in reader:
-
-      # bad line
-      if len(voter) < 1:
-        continue
-
-      voter_id = voter[0]
-      name = voter_id
-      email = voter_id
-      
-      if len(voter) > 1:
-        email = voter[1]
-      
-      if len(voter) > 2:
-        name = voter[2]
-        
-      # create the user
-      user = User.update_or_create(user_type='password', user_id=voter_id, info = {'password': helios_utils.random_string(10), 'email': email, 'name': name})
-      user.save()
-      
-      # does voter for this user already exist
-      voter = Voter.get_by_election_and_user(election, user)
-      
-      # create the voter
-      if not voter:
-        voter_uuid = str(uuid.uuid1())
-        voter = Voter(uuid= voter_uuid, voter_type = 'password', voter_id = voter_id, name = name, election = election)
-        voter.save()
-    
-    return HttpResponse("OK")
+    # we store the file away for future processing
+    voters_file = request.FILES['voters_file']
+    election.add_voters_file(voters_file)
+    return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
 
 @election_admin(frozen=True)
 def voters_email(request, election):
