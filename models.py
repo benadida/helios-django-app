@@ -42,11 +42,6 @@ class Election(models.Model, electionalgs.Election):
   # [{'auth_system': 'cas', 'constraint': [{'year': 'u12'}, {'year':'u13'}]}, {'auth_system' : 'password'}, {'auth_system' : 'openid', 'constraint': [{'host':'http://myopenid.com'}]}]
   eligibility = JSONField(null=True)
 
-  # types of ballot and tally
-  # REMOVED 2009-11-19, we do choice_type and tally_type in the questions now
-  #ballot_type = db.StringProperty(multiline=False)
-  #tally_type = db.StringProperty(multiline=False)
-  
   # open registration?
   # this is now used to indicate the state of registration,
   # whether or not the election is frozen
@@ -65,10 +60,20 @@ class Election(models.Model, electionalgs.Election):
   frozen_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
   archived_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
   
-  # dates to open up voting
+  # dates for the election steps, as scheduled
   # these are always UTC
+  registration_starts_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
   voting_starts_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
   voting_ends_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
+  tallying_starts_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
+  
+  # dates when things were forced to be performed
+  voting_started_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
+  voting_extended_until = models.DateTimeField(auto_now_add=False, default=None, null=True)
+  voting_ended_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
+  tallying_started_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
+  tallying_finished_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
+  tallies_combined_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
 
   # the hash of all voters (stored for large numbers)
   voters_hash = models.CharField(max_length=100, null=True)
