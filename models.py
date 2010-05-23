@@ -133,6 +133,7 @@ class Election(models.Model, electionalgs.Election):
     random_filename = str(uuid.uuid1())
     new_voter_file = VoterFile(election = self)
     new_voter_file.voter_file.save(random_filename, uploaded_file)
+    self.append_log(ElectionLog.VOTER_FILE_ADDED)
   
   def user_eligible_p(self, user):
     """
@@ -178,6 +179,10 @@ class Election(models.Model, electionalgs.Election):
     decryption_factors = [t.decryption_factors for t in trustees]
     
     self.result = self.encrypted_tally.decrypt_from_factors(decryption_factors, self.public_key)
+
+    self.append_log(ElectionLog.DECRYPTIONS_COMBINED)
+
+    self.save()
   
   def generate_voters_hash(self):
     """
@@ -213,6 +218,9 @@ class Election(models.Model, electionalgs.Election):
       
     self.public_key = combined_pk
     
+    # log it
+    self.append_log(ElectionLog.FROZEN)
+
     self.save()
 
   def generate_trustee(self, params):
@@ -241,9 +249,30 @@ class Election(models.Model, electionalgs.Election):
     num_helios_trustees = len(self.trustee_set.exclude(secret_key = None))
     return num_helios_trustees > 0
 
+  def append_log(self, text):
+    item = ElectionLog(election = self, log=text, at=datetime.datetime.utcnow())
+    item.save()
+    return item
+
+  def get_log(self):
+    return self.electionlog_set.order_by('-at')
+
   @property
   def url(self):
     return helios.get_election_url(self)
+
+class ElectionLog(models.Model):
+  """
+  a log of events for an election
+  """
+
+  FROZEN = "frozen"
+  VOTER_FILE_ADDED = "voter file added"
+  DECRYPTIONS_COMBINED = "decryptions combined"
+
+  election = models.ForeignKey(Election)
+  log = models.CharField(max_length=500)
+  at = models.DateTimeField(auto_now_add=True)
 
 class VoterFile(models.Model):
   """
@@ -441,6 +470,7 @@ class Trustee(models.Model, electionalgs.Trustee):
     # not saved yet?
     if not self.secret:
       self.secret = heliosutils.random_string(12)
+      self.election.append_log("Trustee %s added" % self.name)
       
     super(Trustee, self).save(*args, **kwargs)
   
