@@ -5,6 +5,11 @@
 <p>
     <a href="{% url helios.views.new_trustee election.uuid %}">new trustee</a>
 </p>
+{% if not election.has_helios_trustee %}
+<p>
+    <a href="{% url helios.views.new_trustee_helios election.uuid %}">add Helios as a trustee</a>
+</p>
+{% endif %}
 {% endif %}
 {% endblock %}
 
@@ -26,9 +31,11 @@
 {% for t in trustees %}
 <h3> Trustee #{{forloop.counter}}: {{t.name}} 
 {% if admin_p %}
+{% if not t.secret_key %}
 ({{t.email}})
 {% if not election.frozen_at %}[<a onclick="return confirm('Are you sure you want to remove this Trustee?');" href="{% url helios.views.delete_trustee election.uuid %}?uuid={{t.uuid}}">x</a>]{% endif %}
 [<a onclick="return confirm('Are you sure you want to send this trustee his/her admin URL?');" href="{% url helios.views.trustee_send_url election.uuid t.uuid %}">send login</a>]
+{% endif %}
 {% endif %}
 </h3>
 

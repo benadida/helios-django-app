@@ -235,6 +235,14 @@ def new_trustee(request, election):
     trustee = Trustee(uuid = str(uuid.uuid1()), election = election, name=name, email=email)
     trustee.save()
     return HttpResponseRedirect(reverse(list_trustees_view, args=[election.uuid]))
+
+@election_admin(frozen=False)
+def new_trustee_helios(request, election):
+  """
+  Make Helios a trustee of the election
+  """
+  election.generate_trustee(ELGAMAL_PARAMS)
+  return HttpResponseRedirect(reverse(list_trustees_view, args=[election.uuid]))
   
 @election_admin()
 def delete_trustee(request, election):

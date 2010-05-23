@@ -215,6 +215,32 @@ class Election(models.Model, electionalgs.Election):
     
     self.save()
 
+  def generate_trustee(self, params):
+    """
+    generate a trustee including the secret key,
+    thus a helios-based trustee
+    """
+    # FIXME: generate the keypair
+    keypair = params.generate_keypair()
+
+    # create the trustee
+    trustee = Trustee(election = self)
+    trustee.uuid = str(uuid.uuid1())
+    trustee.name = 'Helios'
+    trustee.email = settings.DEFAULT_FROM_EMAIL
+    trustee.public_key = keypair.pk
+    trustee.secret_key = keypair.sk
+    
+    # FIXME: compute it
+    trustee.public_key_hash = utils.hash_b64(utils.to_json(trustee.public_key.toJSONDict()))
+    trustee.pok = trustee.secret_key.prove_sk(algs.DLog_challenge_generator)
+
+    trustee.save()
+
+  def has_helios_trustee(self):
+    num_helios_trustees = len(self.trustee_set.exclude(secret_key = None))
+    return num_helios_trustees > 0
+
   @property
   def url(self):
     return helios.get_election_url(self)
@@ -395,6 +421,11 @@ class Trustee(models.Model, electionalgs.Trustee):
   # public key
   public_key = JSONField(algs.EGPublicKey, null=True)
   public_key_hash = models.CharField(max_length=100)
+
+  # secret key
+  # if the secret key is present, this means
+  # Helios is playing the role of the trustee.
+  secret_key = JSONField(algs.EGSecretKey, null=True)
   
   # proof of knowledge of secret key
   pok = JSONField(algs.DLogProof, null=True)
