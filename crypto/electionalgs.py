@@ -554,11 +554,7 @@ class Tally(HeliosObject):
     self.election = kwargs.get('election',None)
 
     if self.election:
-      self.questions = self.election.questions
-      self.public_key = self.election.public_key
-      
-      if not self.tally:
-        self.tally = [[0 for a in q['answers']] for q in self.questions]
+      self.init_election(self.election)
     else:
       self.questions = None
       self.public_key = None
@@ -569,6 +565,16 @@ class Tally(HeliosObject):
     # initialize
     if self.num_tallied == None:
       self.num_tallied = 0    
+
+  def init_election(self, election):
+    """
+    given the election, initialize some params
+    """
+    self.questions = election.questions
+    self.public_key = election.public_key
+    
+    if not self.tally:
+      self.tally = [[0 for a in q['answers']] for q in self.questions]
     
   def add_vote_batch(self, encrypted_votes, verify_p=True):
     """
@@ -597,6 +603,32 @@ class Tally(HeliosObject):
         self.tally[question_num][answer_num] = encrypted_vote.encrypted_answers[question_num].choices[answer_num] * self.tally[question_num][answer_num]
 
     self.num_tallied += 1
+
+  def decryption_factors_and_proofs(self, sk):
+    """
+    returns an array of decryption factors and a corresponding array of decryption proofs.
+    """
+    # for all choices of all questions (double list comprehension)
+    decryption_factors = []
+    decryption_proof = []
+    
+    for question_num, question in enumerate(self.questions):
+      answers = question['answers']
+      question_factors = []
+      question_proof = []
+
+      for answer_num, answer in enumerate(answers):
+        # do decryption and proof of it
+        dec_factor, proof = sk.decryption_factor_and_proof(self.tally[question_num][answer_num])
+
+        # look up appropriate discrete log
+        question_factors.append(dec_factor)
+        question_proof.append(proof.toJSONDict())
+        
+      decryption_factors.append(question_factors)
+      decryption_proof.append(question_proof)
+    
+    return decryption_factors, decryption_proof
     
   def decrypt_and_prove(self, sk, discrete_logs=None):
     """

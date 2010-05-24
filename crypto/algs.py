@@ -261,12 +261,35 @@ class EGSecretKey:
     def __init__(self):
         self.x = None
         self.pk = None
-        
-    def decrypt(self, ciphertext, decode_m=False):
+    
+    def decryption_factor(self, ciphertext):
+        """
+        provide the decryption factor, not yet inverted because of needed proof
+        """
+        return pow(ciphertext.alpha, self.x, self.pk.p)
+
+    def decryption_factor_and_proof(self, ciphertext, challenge_generator=None):
+        """
+        challenge generator is almost certainly
+        EG_fiatshamir_challenge_generator
+        """
+        if not challenge_generator:
+            challenge_generator = EG_fiatshamir_challenge_generator
+
+        dec_factor = self.decryption_factor(ciphertext)
+
+        proof = EGZKProof.generate(self.pk.g, ciphertext.alpha, self.x, self.pk.p, self.pk.q, challenge_generator)
+
+        return dec_factor, proof
+
+    def decrypt(self, ciphertext, dec_factor = None, decode_m=False):
         """
         Decrypt a ciphertext. Optional parameter decides whether to encode the message into the proper subgroup.
         """
-        m = (Utils.inverse(pow(ciphertext.alpha, self.x, self.pk.p), self.pk.p) * ciphertext.beta) % self.pk.p
+        if not dec_factor:
+            dec_factor = self.decryption_factor(ciphertext)
+
+        m = (Utils.inverse(dec_factor, self.pk.p) * ciphertext.beta) % self.pk.p
 
         if decode_m:
           # get m back from the q-order subgroup
@@ -592,6 +615,32 @@ class EGZKProof(object):
     self.response = None
   
   @classmethod
+  def generate(cls, little_g, little_h, x, p, q, challenge_generator):
+      """
+      generate a DDH tuple proof, where challenge generator is
+      almost certainly EG_fiatshamir_challenge_generator
+      """
+
+      # generate random w
+      w = Utils.random_mpz_lt(q)
+      
+      # create proof instance
+      proof = cls()
+
+      # compute A = little_g^w, B=little_h^w
+      proof.commitment['A'] = pow(little_g, w, p)
+      proof.commitment['B'] = pow(little_h, w, p)
+
+      # get challenge
+      proof.challenge = challenge_generator(proof.commitment)
+
+      # compute response
+      proof.response = (w + (x * proof.challenge)) % q
+
+      # return proof
+      return proof
+      
+  @classmethod
   def from_dict(cls, d):
     p = cls()
     p.commitment = {'A': int(d['commitment']['A']), 'B': int(d['commitment']['B'])}
@@ -607,7 +656,7 @@ class EGZKProof(object):
       'challenge': str(self.challenge),
       'response': str(self.response)
     }
-    
+
   def verify(self, little_g, little_h, big_g, big_h, p, q, challenge_generator=None):
     """
     Verify a DH tuple proof
