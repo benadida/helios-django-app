@@ -94,8 +94,7 @@ class Election(models.Model, electionalgs.Election):
 
   @classmethod
   def get_featured(cls):
-    query = cls.objects.filter(featured_p = True).order_by('short_name')
-    return query
+    return cls.objects.filter(featured_p = True).order_by('short_name')
     
   @classmethod
   def get_or_create(cls, **kwargs):
@@ -154,10 +153,23 @@ class Election(models.Model, electionalgs.Election):
     return False
   
   def voting_has_started(self):
-    return self.frozen_at != None and datetime.datetime.utcnow() >= self.voting_starts_at
+    """
+    has voting begun? voting begins if the election is frozen, at the prescribed date or at the date that voting was forced to start
+    """
+    return self.frozen_at != None and datetime.datetime.utcnow() >= (self.voting_started_at or self.voting_starts_at)
     
   def voting_has_stopped(self):
-    return datetime.datetime.utcnow() >= self.voting_ends_at or self.encrypted_tally
+    """
+    has voting stopped? if tally computed, yes, otherwise if we have passed the date voting was manually stopped at,
+    or failing that the date voting was extended until, or failing that the date voting is scheduled to end at.
+    """
+    return datetime.datetime.utcnow() >= (self.voting_ended_at or self.voting_extended_until or self.voting_ends_at) or self.encrypted_tally
+
+  def ready_for_tallying(self):
+    return datetime.datetime.utcnow() >= self.tallying_starts_at
+  
+  def ready_for_decryption(self):
+    return self.encrypted_tally != None
     
   def ready_for_decryption_combination(self):
     """
@@ -188,6 +200,7 @@ class Election(models.Model, electionalgs.Election):
     """
     look up the list of voters, make a big file, and hash it
     FIXME: for more than 1000 voters, need to loop multiple times
+    FIXME: is this even used anymore?
     """
     if self.openreg:
       self.voters_hash = None
@@ -205,6 +218,9 @@ class Election(models.Model, electionalgs.Election):
     return 0
         
   def freeze(self):
+    """
+    election is frozen when the voter registration, questions, and trustees are finalized
+    """
     self.frozen_at = datetime.datetime.utcnow()
     
     # voters hash
