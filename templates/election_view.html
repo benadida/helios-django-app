@@ -1,86 +1,6 @@
 {% extends TEMPLATE_BASE %}
 
 
-{% if admin_p %}
-{% block admin %}
-
-<b><em>{% if election.voting_has_started %}
-{% if election.voting_has_stopped %}
-voting has stopped
-{% else %}
-voting has started
-{% endif %}
-{% else %}
-voting has not yet started
-{% endif %}</em></b>
-
-
-<ul>
-<li> Featured Election:
-{% if election.featured_p %}
-<b>YES</b>
-[<a href="{% url helios.views.one_election_set_featured election.uuid %}?featured_p=0">toggle</a>]
-{% else %}
-<b>NO</b>
-[<a href="{% url helios.views.one_election_set_featured election.uuid %}?featured_p=1">toggle</a>]
-{% endif %}
-</li>
-{% if election.voting_has_started %}
-{% else %}
-{% if not election.frozen_at %}
-<li> <a href="edit">election parameters</a></li>
-{% endif %}
-{% endif %}
-<li> Registration 
-<b>{{ election.registration_status_pretty }}</b>
-{% if not election.frozen_at %}<br />
-{% if election.openreg %}
-[<a href="{% url helios.views.one_election_set_reg election.uuid %}?open_p=0">turn off</a>]
-{% else %}
-[<a href="{% url helios.views.one_election_set_reg election.uuid %}?open_p=1">turn on</a>]
-{% endif %}
-{% endif %}
-</li>
-
-{% if not election.frozen_at %}
-<li> <a href="{% url helios.views.one_election_build election.uuid %}">questions and answers</a></li>
-<li> <a href="{% url helios.views.list_trustees_view election.uuid %}">trustees</a></li>
-<li> <a href="{% url helios.views.voters_manage election.uuid %}">manage voters</a></li>
-<li> <a href="{% url helios.views.one_election_freeze election.uuid %}"><em>freeze</em> ballot and<br />open election for voting.</a></li>
-{% else %}
-
-<li> <a href="{% url helios.views.voters_manage election.uuid %}">view/search voters</a></li>
-{% if election.encrypted_tally %}
-
-{% if election.result %}
-<b>election tallied</b>
-{% else %}
-{% if election.ready_for_decryption_combination %}
-<li> <a href="{% url helios.views.combine_decryptions election.uuid %}">combine decryptions</a></li>
-{% else %}
-<li> <a href="{% url helios.views.list_trustees_view election.uuid %}">trustees (for decryption)</a></li>
-{% endif %}
-{% endif %}
-
-{% else %}
-
-{% if email_voters %}
-<li> <a href="{% url helios.views.voters_email election.uuid %}">email voters</a></li>
-{% endif %}
-<li> <a href="{% url helios.views.one_election_compute_tally election.uuid %}">compute tally</a></li>
-
-{% endif %}
-
-
-
-{% endif %}
-
-</ul>
-{% endblock %}
-{% endif %}
-
-
-
 {% block content %}
 {% if election.voting_has_started %}
 <script>
@@ -92,26 +12,63 @@ if (!navigator.javaEnabled()) {
 }
 </script>
 {% endif %}
-  <h2 class="title">{{ election.name }}</h2>
-<p style="padding-top:0; margin-top:2px">
-  {% if election.admin.info.name %}
-an election created by <u><b>{{election.admin.info.name}}</b></u>
-{% if election.questions %}
-    consisting of {{election.questions|length}} questions.
+  <h2 class="title">{{ election.name }}
+{% if admin_p %}
+{% if not election.frozen_p %}
+<span class="adminaction"><a href="{% url helios.views.one_election_edit election.uuid %}">edit</a></span>
+{% endif %}
+{% endif %}</h2>
+<p style="padding-top:0px; margin-top:0px">
+an election created by <u><b>{{election.admin.pretty_name}}</b></u><br />
+{% if admin_p %}
+{% if election.featured_p %}
+this election is featured on the front page.
+[<a href="{% url helios.views.one_election_set_featured election.uuid %}?featured_p=0">unfeature it</a>]
 {% else %}
-    , no questions yet.
+this election is <u>not</u> featured on the front page.
+[<a href="{% url helios.views.one_election_set_featured election.uuid %}?featured_p=1">feature it</a>]
+{% endif %}
+{% endif %}
+</p>
+
+<div style="margin-bottom: 25px;margin-left: 15px; border-left: 1px solid #aaa; padding-left: 5px; font-size:1.3em; ">
+{{election.description}}
+</div>
+
+<p align="center" style="font-size: 1.5em;">
+<a href="{% url helios.views.one_election_questions election.uuid %}">questions ({% if election.questions %}{{election.questions|length}}{% else %}0{% endif %})</a>
+&nbsp;&nbsp;|&nbsp;&nbsp;
+<a href="{% url helios.views.voters_list_pretty election.uuid %}">voters</a>
+&nbsp;&nbsp;|&nbsp;&nbsp;
+<a href="{% url helios.views.list_trustees_view election.uuid %}">trustees ({{trustees|length}})</a>
+</p>
+
+{% if admin_p %}
+<p>
+<b>Next Step:</b>
+<span style="font-size: 1.3em;">
+{% if not election.frozen_at %}
+<a href="{% url helios.views.one_election_freeze election.uuid %}">freeze ballot and open election for voting.</a>
+{% else %}
+
+{% if not election.encrypted_tally %}
+<a href="{% url helios.views.one_election_compute_tally election.uuid %}">compute tally</a>
+{% else %}
+
+{% if election.ready_for_decryption_combination %}
+<a href="{% url helios.views.combine_decryptions election.uuid %}">combine decryptions</a>
+{% else %}
+<a href="{% url helios.views.list_trustees_view election.uuid %}">trustees (for decryption)</a>
 {% endif %}
 
+{% endif %}
+
+{% endif %}
+</span>
 </p>
 {% endif %}
 
-<div style="margin-bottom: 25px;">
-<span style="padding:0px; margin:0px; font-size:1.5em; ">
-"{{election.description}}"
-</span>
-<br />
-{% if election.questions %}{{election.questions|length}}{% else %}0{% endif %} question(s).
-</div>
+<br /><br />
 
 {% if election.result %}
 <span class="highlight-box round">
@@ -141,6 +98,9 @@ an election created by <u><b>{{election.admin.info.name}}</b></u>
 <span class="highlight-box round" style="font-size: 1.6em; margin-right: 10px;" id="votelink">
 <a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">Vote in this election </a>
 </span>
+<br />
+For your privacy, you'll be asked to log in only once your ballot is encrypted.
+
 
 <div class="highlight-box round" style="font-size: 1.2em; margin-right: 400px; display:none;" id="nojava_message">
   You do not have Java installed in your browser.<br />At this time, Helios requires Java.<br />
@@ -186,7 +146,6 @@ You are <em>not eligible</em> to vote in this election.<br />
 {% endif %}
 {% else %}
 
-For your privacy, you'll be asked to log in only once your ballot is encrypted.
 {% endif %}
 
 {% endif %}
@@ -216,14 +175,6 @@ For your privacy, you'll be asked to log in only once your ballot is encrypted.
 <p style="font-size: 1.3em;">
 <a href="{% url helios.views.one_election_bboard election.uuid %}">Ballot Tracking Center</a> &nbsp;| &nbsp;
 <a href="{% url helios.views.one_election_audited_ballots election.uuid %}">Audited Ballots</a>
-</p>
-
-<p>
-Trustees: 
-{% for t in trustees %}
-{{t.name}}&nbsp;&nbsp;
-{% endfor %}
-[<a href="{% url helios.views.list_trustees_view election.uuid %}">more info</a>]
 </p>
 
 {% if not election.voting_has_started %}

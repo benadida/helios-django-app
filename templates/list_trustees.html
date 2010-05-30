@@ -1,6 +1,13 @@
 {% extends "helios/templates/cryptobase.html" %}
 
-{% block admin %}
+{% block content %}
+  <h2 class="title">{{election.name}} &mdash; Trustees <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>]</span></h2>
+
+<p>
+    Trustees are responsible for decrypting the election result.
+</p>
+
+
 {% if not election.frozen_at %}
 <p>
     <a href="{% url helios.views.new_trustee election.uuid %}">new trustee</a>
@@ -11,23 +18,10 @@
 </p>
 {% endif %}
 {% endif %}
-{% endblock %}
-
-{% block content %}
-  <h2 class="title">{{election.name}} &mdash; Trustees <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>]</span></h2>
 
 {% if not trustees|length %}
-<p><em>no trustees yet</em></p>
-
-<p>
-    Trustees are responsible for decrypting the election result.
-</p>
 
 {% else %}
-<p>
-  The following trustees manage the decryption process for this election.
-</p>
-
 {% for t in trustees %}
 <h3> Trustee #{{forloop.counter}}: {{t.name}} 
 {% if admin_p %}

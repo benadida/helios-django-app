@@ -13,6 +13,7 @@ urlpatterns = patterns('',
     
     # edit election params
     (r'^/edit$', one_election_edit),
+    (r'^/schedule$', one_election_schedule),
 
     # adding trustees
     (r'^/trustees/$', list_trustees),
@@ -37,7 +38,7 @@ urlpatterns = patterns('',
     (r'^/audited-ballots/$', one_election_audited_ballots),
 
     # construct election
-    (r'^/build$', one_election_build),
+    (r'^/questions$', one_election_questions),
     (r'^/set_reg$', one_election_set_reg),
     (r'^/set_featured$', one_election_set_featured),
     (r'^/save_questions$', one_election_save_questions),
@@ -59,7 +60,7 @@ urlpatterns = patterns('',
     # managing voters
     (r'^/voters/$', voter_list),
     (r'^/voters/upload$', voters_upload),
-    (r'^/voters/manage$', voters_manage),
+    (r'^/voters/list$', voters_list_pretty),
     (r'^/voters/search$', voters_search),
     (r'^/voters/email$', voters_email),
     (r'^/voters/(?P<voter_uuid>[^/]+)$', one_voter),

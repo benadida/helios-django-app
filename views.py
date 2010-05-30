@@ -151,7 +151,7 @@ def election_new(request):
 def one_election_edit(request, election):
 
   error = None
-  RELEVANT_FIELDS = ['short_name', 'name', 'description', 'use_voter_aliases', 'voting_starts_at', 'voting_ends_at']
+  RELEVANT_FIELDS = ['short_name', 'name', 'description', 'use_voter_aliases']
   
   if request.method == "GET":
     values = {}
@@ -171,6 +171,10 @@ def one_election_edit(request, election):
       return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
   
   return render_template(request, "election_edit", {'election_form' : election_form, 'error': error})
+
+@election_admin(frozen=False)
+def one_election_schedule(request, election):
+  return HttpResponse("foo")
 
 @election_view()
 @json
@@ -202,7 +206,7 @@ def one_election_view(request, election):
     
   trustees = Trustee.get_by_election(election)
     
-  return render_template(request, 'election_view', {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'email_voters': helios.VOTERS_EMAIL, 'eligible_p': eligible_p})
+  return render_template(request, 'election_view', {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'eligible_p': eligible_p})
   
 ##
 ## Trustees and Public Key
@@ -521,7 +525,7 @@ def one_election_set_reg(request, election):
   election.openreg = open_p
   election.save()
   
-  return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
+  return HttpResponseRedirect(reverse(voters_list_pretty, args=[election.uuid]))
 
 @election_admin()
 def one_election_set_featured(request, election):
@@ -544,6 +548,7 @@ def one_election_archive(request, election, admin, api_client):
   else:
     election.archived_at = None
     
+  # FIXME: what is this??
   storage.election_update(election)
 
   if get_user(request):
@@ -551,11 +556,16 @@ def one_election_archive(request, election, admin, api_client):
   else:
     return SUCCESS
 
-@election_admin(frozen=False)
-def one_election_build(request, election):
+# changed from admin to view because 
+# anyone can see the questions, the administration aspect is now
+# built into the page
+@election_view()
+def one_election_questions(request, election):
   questions_json = utils.to_json(election.questions)
-  
-  return render_template(request, 'election_build', {'election': election, 'questions_json' : questions_json})
+  user = get_user(request)
+  admin_p = user and (user == election.admin)  
+
+  return render_template(request, 'election_questions', {'election': election, 'questions_json' : questions_json, 'admin_p': admin_p})
 
 def _check_eligibility(election, user):
   return election.user_eligible_p(user)
@@ -730,8 +740,8 @@ def one_election_set_result_and_proof(request, election):
     return SUCCESS
   
   
-@election_admin()
-def voters_manage(request, election):
+@election_view()
+def voters_list_pretty(request, election):
   """
   Show the list of voters
   """
@@ -740,6 +750,9 @@ def voters_manage(request, election):
   limit = int(request.GET.get('limit', 50))
   
   order_by = 'voter_id'
+
+  user = get_user(request)
+  admin_p = user and (user == election.admin)  
   
   # load a bunch of voters
   voters = Voter.get_by_election(election, after=after, limit=limit+1, order_by=order_by)
@@ -751,8 +764,11 @@ def voters_manage(request, election):
   else:
     next_after = None
     
-  return render_template(request, 'voters_manage', {'election': election, 'voters': voters, 'next_after': next_after,
-                'offset': offset, 'limit': limit, 'offset_plus_one': offset+1, 'offset_plus_limit': offset+min(limit,len(voters)), 'upload_p': helios.VOTERS_UPLOAD})
+  return render_template(request, 'voters_list', {'election': election, 'voters': voters, 'admin_p': admin_p, 
+                                                  'next_after': next_after, 'email_voters': helios.VOTERS_EMAIL,
+                                                  'offset': offset, 'limit': limit, 'offset_plus_one': offset+1,
+                                                  'offset_plus_limit': offset+min(limit,len(voters)),
+                                                  'upload_p': helios.VOTERS_UPLOAD})
 
 @election_admin()
 def voters_search(request, election):
