@@ -27,11 +27,32 @@
 <form method="get" action="{% url helios.views.voters_search election.uuid %}"><b>search</b>: <input type="text" name="q" /> <input type="submit" value="search" /></form>
 </p>
 
-<p>
 {% if admin_p and upload_p %}
+<p>
 <a href="{% url helios.views.voters_upload election_uuid=election.uuid %}">bulk upload voters</a>
-{% endif %}
 </p>
+
+{% if voter_files %}
+Prior Bulk Uploads:
+<ul>
+{% for vf in voter_files %}
+<li> {{vf.voter_file.size}} bytes, at {{vf.uploaded_at}}:
+{% if vf.processing_finished_at %}
+<em>done processing: {{vf.num_voters}} voters loaded</em>
+{% else %}
+
+{% if vf.processing_started_at %}
+<em>currently processing</em>
+{% else %}
+<em>not yet processed</em>
+{% endif %}
+
+{% endif %}
+</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endif %}
 
 Voters {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
 

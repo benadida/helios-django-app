@@ -748,6 +748,9 @@ def voters_list_pretty(request, election):
   user = get_user(request)
   admin_p = user and (user == election.admin)  
   
+  # files being processed
+  voter_files = election.voterfile_set.all()
+
   # load a bunch of voters
   voters = Voter.get_by_election(election, after=after, limit=limit+1, order_by=order_by)
     
@@ -762,7 +765,8 @@ def voters_list_pretty(request, election):
                                                   'next_after': next_after, 'email_voters': helios.VOTERS_EMAIL,
                                                   'offset': offset, 'limit': limit, 'offset_plus_one': offset+1,
                                                   'offset_plus_limit': offset+min(limit,len(voters)),
-                                                  'upload_p': helios.VOTERS_UPLOAD})
+                                                  'upload_p': helios.VOTERS_UPLOAD,
+                                                  'voter_files': voter_files})
 
 @election_admin()
 def voters_search(request, election):
@@ -785,8 +789,7 @@ def voters_upload(request, election):
   name and email are needed only if voter_type is static
   """
   if request.method == "GET":
-    voter_files = election.voterfile_set.all()
-    return render_template(request, 'voters_upload', {'election': election, 'voter_files': voter_files})
+    return render_template(request, 'voters_upload', {'election': election})
     
   if request.method == "POST":
     # we store the file away for future processing
