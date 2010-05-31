@@ -123,15 +123,18 @@ Once you do this, the tally will be immediately available for all to see.
 <span class="highlight-box round" style="font-size: 1.6em; margin-right: 10px;" id="votelink">
 <a href="/booth/vote.html?election_url={% url helios.views.one_election election.uuid %}">Vote in this election </a>
 </span>
+{% if not user %}
 <br />
+<br /><br />
 For your privacy, you'll be asked to log in only once your ballot is encrypted.
+{% endif %}
 
 
 <div class="highlight-box round" style="font-size: 1.2em; margin-right: 400px; display:none;" id="nojava_message">
   You do not have Java installed in your browser.<br />At this time, Helios requires Java.<br />
   Visit <a target="_new" href="http://java.sun.com">java.sun.com</a> to install it.
 </div>
-<br /><br />
+<br />
 {% else %}
 <span class="highlight-box round">
   voting is not yet open
@@ -140,7 +143,7 @@ For your privacy, you'll be asked to log in only once your ballot is encrypted.
 
 {% if user %}
 {% if voter %}
-<p style="padding-top:5px;">
+<p style="padding-top:1px;">
   You are registered to vote in this election.
 {% if election.use_voter_aliases %}
 Your voter alias is {{voter.alias}}.
@@ -177,7 +180,6 @@ You are <em>not eligible</em> to vote in this election.<br />
 
 {% endif %}
 
-<br clear="left" />
 
 <div style="background: lightyellow; padding:5px; padding-left: 10px; margin-top: 15px; border: 1px solid #aaa; width: 720px;" class="round">
 <a href="#" onclick="$('#auditbody').slideToggle(250);">Audit Info</a>

@@ -23,7 +23,7 @@ function show_waiting() {
 <p>
   You are logged in as 
 <span style="font-size: 1.4em; text-decoration:underline;">
-    {{user.name}}</span>.
+    {{user.pretty_name}}</span>.
 </p>
 
 {% if voter %}
@@ -47,7 +47,7 @@ function show_waiting() {
 <form method="post" action="" onsubmit="show_waiting()">
     <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
     
-    <input type="submit" value="I am {{user.name}}, cast this ballot" style="font-size: 1.5em;" />
+    <input type="submit" value="I am {{user.pretty_name}}, cast this ballot" style="font-size: 1.5em;" />
     <span style="font-size:0.8em;"><br />You can cast as many ballots as you want.<br />Only the last one counts.</span>
 </form>
 
