@@ -18,14 +18,11 @@
   CSRF_TOKEN = '{{csrf_token}}';
 
   function refresh() {
-      $('#questions').processTemplate({'questions' : QUESTIONS, 'admin_p' : ADMIN_P});
-  }
-  
-  $(document).ready(function() {
-      $('#questions').setTemplateURL("/static/helios/static_templates/question.html");
+      $('#questions').processTemplate({'questions' : QUESTIONS, 'admin_p' : ADMIN_P}); 
 
-      refresh();
-  });
+      NUM_ANSWERS = 0;
+      add_answers(DEFAULT_NUM_ANSWERS);
+ }
   
   function save_questions(callback) {
       $.post('./save_questions', {'questions_json' : $.toJSON(QUESTIONS), 'csrf_token': CSRF_TOKEN}, function(result) {
@@ -63,6 +60,33 @@
       QUESTIONS = new_questions;
       save_questions(refresh);
   }
+
+  var DEFAULT_NUM_ANSWERS = 5;
+  var NUM_ANSWERS = 0;
+
+  function add_answer() {
+    NUM_ANSWERS += 1;
+    $('#answer_table tbody').append('<tr><th>&nbsp;&nbsp;&nbsp;</th><th>Answer #' + NUM_ANSWERS + '</th><td><input type="text" name="answer_' + NUM_ANSWERS + '" size="70" /></td></tr>');
+  }
+
+  function add_answers(num) {
+    for (var i=0; i<num; i++)
+      add_answer();
+  }
+
+  function question_move_up(num) {
+    var temp_q = QUESTIONS[num];
+    QUESTIONS[num] = QUESTIONS[num-1];
+    QUESTIONS[num-1] = temp_q;
+    save_questions(refresh);
+  }
+
+  $(document).ready(function() {
+      $('#questions').setTemplateURL("/static/helios/static_templates/question.html");
+
+      refresh();
+  });
+  
 
   </script>
 

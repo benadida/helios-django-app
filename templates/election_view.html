@@ -14,7 +14,7 @@ if (!navigator.javaEnabled()) {
 {% endif %}
   <h2 class="title">{{ election.name }}
 {% if admin_p %}
-{% if not election.frozen_p %}
+{% if not election.frozen_at %}
 <span class="adminaction"><a href="{% url helios.views.one_election_edit election.uuid %}">edit</a></span>
 {% endif %}
 {% endif %}</h2>
