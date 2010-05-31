@@ -48,14 +48,31 @@ Voters {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
 {% endif %}
 
 <table class="pretty">
-<tr><th>Alias</th><th>Name</th><th>Username</th></tr>
+<tr>
+{% if admin_p or not election.use_voter_aliases %}
+<th>Username</th>
+<th>Name</th>
+{% endif %}
+
+{% if election.use_voter_aliases %}
+<th>Alias</th>
+{% endif %}
+</tr>
 {% for voter in voters %}
-<tr><td>{{voter.alias}}</td><td>{{voter.name}}</td><td>{{voter.voter_id}}
-{% if election.frozen_at %}
+<tr>
+{% if admin_p or not election.use_voter_aliases %}
+<td>{{voter.voter_id}}
+{% if election.frozen_at or not admin_p %}
 {% else %}
 [<a onclick="return confirm('are you sure you want to remove {{voter.name}} ?');" href="{% url helios.views.voter_delete election.uuid, voter.uuid %}">x</a>]
 {% endif %}
-</td></tr>
+</td>
+<td>{{voter.name}}</td>
+{% endif %}
+{% if election.use_voter_aliases %}
+<td>{{voter.alias}}</td>
+{% endif %}
+</tr>
 {% endfor %}
 </table>
 

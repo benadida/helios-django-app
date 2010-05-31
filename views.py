@@ -170,7 +170,7 @@ def one_election_edit(request, election):
         
       return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
   
-  return render_template(request, "election_edit", {'election_form' : election_form, 'error': error})
+  return render_template(request, "election_edit", {'election_form' : election_form, 'election' : election, 'error': error})
 
 @election_admin(frozen=False)
 def one_election_schedule(request, election):
