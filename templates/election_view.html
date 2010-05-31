@@ -45,18 +45,40 @@ this election is <u>not</u> featured on the front page.
 
 {% if admin_p %}
 <p>
+
+{% if election.result %}
+
+<!-- election complete, no next step -->
+
+{% else %}
 <b>Next Step:</b>
 <span style="font-size: 1.3em;">
 {% if not election.frozen_at %}
-<a href="{% url helios.views.one_election_freeze election.uuid %}">freeze ballot and open election for voting.</a>
+{% if election.issues_before_freeze %}
+add questions, voters, and trustees.
+{% else %}
+<a href="{% url helios.views.one_election_freeze election.uuid %}">freeze ballot and open election.</a>
+<br />
+{% if election.voting_starts_at %}
+once you do this, the election will be ready for voting and will open automatically<br />
+at {{election.voting_starts_at}}, as per your settings.
+{% else %}
+once you do this, the election will be immediately open for voting.
+{% endif %}
+{% endif %}
+
 {% else %}
 
 {% if not election.encrypted_tally %}
-<a href="{% url helios.views.one_election_compute_tally election.uuid %}">compute tally</a>
+<a href="{% url helios.views.one_election_compute_tally election.uuid %}">compute encrypted tally</a><br />
+The encrypted votes will be combined into an encrypted tally. Once this is done,<br />
+trustees will be asked to provide their share of the decryption.
 {% else %}
 
 {% if election.ready_for_decryption_combination %}
-<a href="{% url helios.views.combine_decryptions election.uuid %}">combine decryptions</a>
+<a href="{% url helios.views.combine_decryptions election.uuid %}">combine trustee decryptions and release results</a><br />
+The decryption shares from the trustees are combined and the tally is decrypted.<br />
+Once you do this, the tally will be immediately available for all to see.
 {% else %}
 <a href="{% url helios.views.list_trustees_view election.uuid %}">trustees (for decryption)</a>
 {% endif %}
@@ -65,6 +87,9 @@ this election is <u>not</u> featured on the front page.
 
 {% endif %}
 </span>
+
+{% endif %}
+
 </p>
 {% endif %}
 

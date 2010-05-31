@@ -165,6 +165,19 @@ class Election(models.Model, electionalgs.Election):
     """
     return datetime.datetime.utcnow() >= (self.voting_ended_at or self.voting_extended_until or self.voting_ends_at) or self.encrypted_tally
 
+  @property
+  def issues_before_freeze(self):
+    issues = []
+    if self.questions == None or len(self.questions) == 0:
+      issues.append("no questions")
+  
+    trustees = Trustee.get_by_election(self)
+    if len(trustees) == 0:
+      issues.append("no trustees")
+
+    return issues
+    
+
   def ready_for_tallying(self):
     return datetime.datetime.utcnow() >= self.tallying_starts_at
   

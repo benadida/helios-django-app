@@ -608,14 +608,8 @@ def one_election_save_questions(request, election):
 @election_admin(frozen=False)
 def one_election_freeze(request, election):
   # figure out the number of questions and trustees
-  issues = []
-  if election.questions == None or len(election.questions) == 0:
-    issues.append("no questions")
-  
-  trustees = Trustee.get_by_election(election)
-  if len(trustees) == 0:
-    issues.append("no trustees")
-    
+  issues = election.issues_before_freeze
+
   if request.method == "GET":
     return render_template(request, 'election_freeze', {'election': election, 'issues' : issues, 'issues_p' : len(issues) > 0})
   else:
