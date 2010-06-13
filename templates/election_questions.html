@@ -9,7 +9,7 @@
 {% else %}
   QUESTIONS = [];
 {% endif %}
-{% if admin_p %}
+{% if admin_p and not election.frozen_at %}
   ADMIN_P = true;
 {% else %}
   ADMIN_P = false;
