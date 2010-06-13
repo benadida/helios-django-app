@@ -405,19 +405,15 @@ def one_election_cast_confirm(request, election):
     # bring back to the confirmation page to let him know
     if not user or not voter:
       return HttpResponseRedirect(reverse(one_election_cast_confirm, args=[election.uuid]))
-            
+    
+    # we no longer verify the vote here
+    # that is now done asynchronously
     # verify the vote
-    if cast_vote.vote.verify(election):
-      # store it
-      voter.store_vote(cast_vote)
-    else:
-      return HttpResponse("vote does not verify: \n\n" + utils.to_json(cast_vote.vote.toJSONDict()))
+    voter.store_vote(cast_vote)
     
     # remove the vote from the store
     del request.session['encrypted_vote']
     
-    import logging
-    logging.error("about to send signal!!")
     # send the signal
     signals.vote_cast.send(sender=election, election=election, user=user, voter=voter, cast_vote=cast_vote)
     

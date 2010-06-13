@@ -429,7 +429,11 @@ class CastVote(models.Model, electionalgs.CastVote):
   # cache the hash of the vote
   vote_hash = models.CharField(max_length=100)
 
-  cast_at = models.DateTimeField(auto_now_add=True)  
+  cast_at = models.DateTimeField(auto_now_add=True)
+
+  # when is the vote verified?
+  verified_at = models.DateTimeField(null=True)
+  invalidated_at = models.DateTimeField(null=True)
   
   @property
   def voter_uuid(self):
