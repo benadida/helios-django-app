@@ -20,8 +20,7 @@
   function refresh() {
       $('#questions').processTemplate({'questions' : QUESTIONS, 'admin_p' : ADMIN_P}); 
 
-      NUM_ANSWERS = 0;
-      add_answers(DEFAULT_NUM_ANSWERS);
+      add_answers($('#answer_table'),DEFAULT_NUM_ANSWERS);
  }
   
   function save_questions(callback) {
@@ -30,7 +29,7 @@
       });      
   }
   
-  function question_add(form) {
+  function get_question_from_form(form) {
       var max = null;
       if (form.max.value != "")
         max = parseInt(form.max.value);
@@ -45,8 +44,12 @@
           new_q.answer_urls[i-1] = null;
       }
       
-      QUESTIONS.push(new_q);
-      
+     return new_q;
+  }
+
+  function question_add(form) {
+      var new_q = get_question_from_form(form);
+      QUESTIONS.push(new_q);za
       save_questions(refresh);
   }
   
@@ -61,17 +64,47 @@
       save_questions(refresh);
   }
 
-  var DEFAULT_NUM_ANSWERS = 5;
-  var NUM_ANSWERS = 0;
+  function question_edit(q_num) {
+    $('#q_view_'+q_num).hide();
+    $('#q_edit_'+q_num).show();
 
-  function add_answer() {
-    NUM_ANSWERS += 1;
-    $('#answer_table tbody').append('<tr><th>&nbsp;&nbsp;&nbsp;</th><th>Answer #' + NUM_ANSWERS + '</th><td><input type="text" name="answer_' + NUM_ANSWERS + '" size="70" /></td></tr>');
+    // set the default values for this question
+    var form = $('#question_edit_' + q_num + '_form');
+    var q_data = QUESTIONS[q_num];
+    form[0].min.value = q_data.min;
+    form[0].max.value = q_data.max;
+    form[0].question.value = q_data.question;
+
+    // add the answers
+    var answer_table = $('#answer_table_' + q_num);
+    add_answers(answer_table, q_data.answers.length);
+    $(q_data.answers).each(function(i, a) {
+     form[0]['answer_' + (i+1)].value = a;
+    });
   }
 
-  function add_answers(num) {
+  function question_edit_cancel(q_num) {
+    $('#q_edit_'+q_num).hide();
+    $('#q_view_'+q_num).show();
+  }
+
+  function question_update(q_num, form) {
+      var new_q = get_question_from_form(form);
+      QUESTIONS[q_num] = new_q;
+      save_questions(refresh);
+  }
+
+  var DEFAULT_NUM_ANSWERS = 5;
+
+  function add_answer(el) {
+    el = $(el);
+    var num_answers = el.find('input.answer').length + 1;
+    el.find('tbody').append('<tr><th>&nbsp;&nbsp;&nbsp;</th><th>Answer #' + num_answers + '</th><td><input type="text" class="answer" name="answer_' + num_answers + '" size="70" /></td></tr>');
+  }
+
+  function add_answers(el, num) {
     for (var i=0; i<num; i++)
-      add_answer();
+      add_answer(el);
   }
 
   function question_move_up(num) {
