@@ -408,8 +408,10 @@ def one_election_cast_confirm(request, election):
     
     # we no longer verify the vote here
     # that is now done asynchronously
-    # verify the vote
-    voter.store_vote(cast_vote)
+
+    # don't store the vote in the voter's data structure until verification
+    cast_vote.save()
+    # voter.store_vote(cast_vote)
     
     # remove the vote from the store
     del request.session['encrypted_vote']

@@ -412,7 +412,9 @@ class Voter(models.Model, electionalgs.Voter):
     return self.election.uuid
   
   def store_vote(self, cast_vote):
-    cast_vote.save()
+    # only store the vote if it's cast later than the current one
+    if self.cast_at and cast_vote.cast_at < self.cast_at:
+      return
 
     self.vote = cast_vote.vote
     self.vote_hash = cast_vote.vote_hash
@@ -450,6 +452,17 @@ class CastVote(models.Model, electionalgs.CastVote):
   @classmethod
   def get_by_voter(cls, voter):
     return cls.objects.filter(voter = voter).order_by('-cast_at')
+
+  def verify_and_store(self):
+    if self.vote.verify(self.voter.election):
+      self.verified_at = datetime.datetime.utcnow()
+    else:
+      self.invalidated_at = datetime.datetime.utcnow()
+      
+    # save and store the vote as the voter's last cast vote
+    self.save()
+    self.voter.store_vote(self)
+    
     
 class AuditedBallot(models.Model):
   """

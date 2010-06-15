@@ -30,13 +30,8 @@ class Command(BaseCommand):
             cast_vote = get_cast_vote_to_verify()
             if not cast_vote:
                 break
-            
-            if cast_vote.vote.verify(cast_vote.voter.election):
-                cast_vote.verified_at = datetime.datetime.utcnow()
-            else:
-                cast_vote.invalidated_at = datetime.datetime.utcnow()
 
-            cast_vote.save()
+            cast_vote.verify_and_store()
 
         # once broken out of the while loop, quit and wait for next invocation
         # this happens when there are no votes left to verify
