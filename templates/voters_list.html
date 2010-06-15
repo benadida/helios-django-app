@@ -54,6 +54,7 @@ Prior Bulk Uploads:
 {% endif %}
 {% endif %}
 
+{% if voters %}
 Voters {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
 
 {% if next_after %}
@@ -97,5 +98,8 @@ Voters {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
 {% endfor %}
 </table>
 
+{% else %}
+<em>no voters yet</em>
+{% endif %}
 
 {% endblock %}

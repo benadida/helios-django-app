@@ -607,6 +607,7 @@ class Tally(HeliosObject):
   def decryption_factors_and_proofs(self, sk):
     """
     returns an array of decryption factors and a corresponding array of decryption proofs.
+    makes the decryption factors into strings, for general Helios / JS compatibility.
     """
     # for all choices of all questions (double list comprehension)
     decryption_factors = []
@@ -622,7 +623,8 @@ class Tally(HeliosObject):
         dec_factor, proof = sk.decryption_factor_and_proof(self.tally[question_num][answer_num])
 
         # look up appropriate discrete log
-        question_factors.append(dec_factor)
+        # this is the string conversion
+        question_factors.append(str(dec_factor))
         question_proof.append(proof.toJSONDict())
         
       decryption_factors.append(question_factors)

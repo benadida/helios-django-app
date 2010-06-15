@@ -88,9 +88,13 @@ class Election(models.Model, electionalgs.Election):
   # decryption proof, a JSON object
   result_proof = JSONField(null=True)
   
-  # keep a bunch of counts
-  num_voters = models.IntegerField(default = 0)
-  num_cast_votes = models.IntegerField(default = 0)
+  @property
+  def num_cast_votes(self):
+    return self.voter_set.exclude(vote=None).count()
+
+  @property
+  def num_voters(self):
+    return self.voter_set.count()
 
   @classmethod
   def get_featured(cls):
