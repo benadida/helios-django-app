@@ -128,7 +128,20 @@ Once you do this, the tally will be immediately available for all to see.
 <br /><br />
 For your privacy, you'll be asked to log in only once your ballot is encrypted.
 {% endif %}
-
+{% if election.voting_extended_until %}
+<br />
+This election was initially scheduled to end at {{election.voting_ends_at}},<br />
+but has been extended until {{ election.voting_extended_until }}.
+{% else %}
+{% if election.voting_ends_at %}
+<br />
+This election is scheduled to end at {{election.voting_ends_at}}.
+{% else %}
+<br />
+This election ends at the administrator's discretion.
+{% endif %}
+<br />
+{% endif %}
 
 <div class="highlight-box round" style="font-size: 1.2em; margin-right: 400px; display:none;" id="nojava_message">
   You do not have Java installed in your browser.<br />At this time, Helios requires Java.<br />
@@ -161,14 +174,10 @@ You are <em>not</em> registered to vote in this election.<br />
 <input type="submit" value="register!" />
 </form>
 {% else %}
-You are not eligible for this election.
+Registration for this election is open, but You are <em>not eligible</em>.
 {% endif %}
 {% else %}
-{% if eligible_p %}
-You are <em>not registered</em> to vote in this election, and registration is closed.<br />
-{% else %}
-You are <em>not eligible</em> to vote in this election.<br />
-{% endif %}
+You are <em>not eligible</em> to vote in this election, because registration is closed and you are not registered.<br />
 {% endif %}
 {% endif %}
 {% endif %}
