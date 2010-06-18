@@ -15,16 +15,24 @@ function iterate_batches(subject, body, after, limit) {
     params['after'] = after;
   
   // submit it
-  $.post('./email', params, function(result){
-    // result gives the last voter_id
-    if (result != "") {
-      var state = $.secureEvalJSON(result);
-      $('#processing').append("emailed " + state.num_emailed + " voters.<br />");
+  $.ajax({
+    type: 'POST',
+    url: './email',
+    data: params,
+    success: function(result){
+      // result gives the last voter_id
+      if (result != "") {
+        var state = $.secureEvalJSON(result);
+        $('#processing').append("emailed " + state.num_emailed + " voters.<br />");
 
-      iterate_batches(subject, body, state.last_voter_id, limit);
-    } else {
-      $('#done').show();
-    }
+        iterate_batches(subject, body, state.last_voter_id, limit);
+      } else {
+        $('#done').show();
+      }
+    },
+   error: function(req, status, error_thrown) {
+    $('#error').show();
+   }
   });
 }
 
@@ -79,6 +87,10 @@ function send_email() {
   
   <div id="done" style="display:none;">
     Done, go <a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>.
+  </div>
+
+  <div id="error" style="display:none;">
+    Error emailing participants. Check server settings, make sure there's an SMTP server.
   </div>
 
 {% endblock %}
