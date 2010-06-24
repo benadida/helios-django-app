@@ -435,7 +435,7 @@ class Trustee(HeliosObject):
   """
   a trustee
   """
-  FIELDS = ['uuid', 'public_key', 'public_key_hash', 'pok', 'decryption_factors', 'decryption_proofs']
+  FIELDS = ['uuid', 'public_key', 'public_key_hash', 'pok', 'decryption_factors', 'decryption_proofs', 'email']
 
   def _process_value_in(self, field_name, field_value):
     if field_name == 'public_key':
