@@ -479,14 +479,14 @@ class AuditedBallot(models.Model):
 
   @classmethod
   def get_by_election(cls, election, after=None, limit=None):
-    query = cls.objects.get(election = election).order_by('vote_hash')
+    query = cls.objects.filter(election = election).order_by('vote_hash')
 
     # if we want the list after a certain UUID, add the inequality here
     if after:
       query = query.filter(vote_hash__gt = after)
 
     if limit:
-      query = query.limit(limit)
+      query = query[:limit]
 
     return query
     
