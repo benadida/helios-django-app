@@ -37,6 +37,9 @@ urlpatterns = patterns('',
     (r'^/bboard$', one_election_bboard),
     (r'^/audited-ballots/$', one_election_audited_ballots),
 
+    # server-side encryption
+    (r'^/encrypt-ballot$', encrypt_ballot),
+
     # construct election
     (r'^/questions$', one_election_questions),
     (r'^/set_reg$', one_election_set_reg),

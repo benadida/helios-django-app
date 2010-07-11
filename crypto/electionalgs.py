@@ -296,7 +296,7 @@ class EncryptedVote(HeliosObject):
   """
   An encrypted ballot
   """
-  FIELDS = ['encrypted_anwers', 'election_hash', 'election_uuid']
+  FIELDS = ['encrypted_answers', 'election_hash', 'election_uuid']
   
   def verify(self, election):
     # right number of answers
@@ -352,7 +352,7 @@ class EncryptedVote(HeliosObject):
 
     # each answer is an index into the answer array
     encrypted_answers = [EncryptedAnswer.fromElectionAndAnswer(election, answer_num, answers[answer_num]) for answer_num in range(len(answers))]
-    return cls(encrypted_answers, election.hash, election.election_id)
+    return cls(encrypted_answers=encrypted_answers, election_hash=election.hash, election_uuid = election.uuid)
     
 class Election(HeliosObject):
   
