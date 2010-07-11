@@ -119,10 +119,13 @@ class HeliosObject(object):
     
     return other != None and self.uuid == other.uuid
   
-class EncryptedAnswer(object):
+class EncryptedAnswer(HeliosObject):
   """
   An encrypted answer to a single election question
   """
+
+  FIELDS = ['choices', 'individual_proofs', 'overall_proof', 'randomness']
+
   def __init__(self, choices=None, individual_proofs=None, overall_proof=None, randomness=None):
     self.choices = choices
     self.individual_proofs = individual_proofs
@@ -189,7 +192,7 @@ class EncryptedAnswer(object):
       # approval voting, no need for overall proof verification
       return True
         
-  def toJSONDict(self):
+  def toJSONDict(self, with_randomness=False):
     value = {
       'choices': [c.to_dict() for c in self.choices],
       'individual_proofs' : [p.to_dict() for p in self.individual_proofs]
@@ -199,6 +202,9 @@ class EncryptedAnswer(object):
       value['overall_proof'] = self.overall_proof.to_dict()
     else:
       value['overall_proof'] = None
+
+    if with_randomness:
+      value['randomness'] = [str(r) for r in self.randomness]
     
     return value
     
@@ -329,9 +335,9 @@ class EncryptedVote(HeliosObject):
   def get_hash(self):
     return utils.hash_b64(utils.to_json(self.toJSONDict()))
     
-  def toJSONDict(self):
+  def toJSONDict(self, with_randomness=False):
     return {
-      'answers': [a.toJSONDict() for a in self.encrypted_answers],
+      'answers': [a.toJSONDict(with_randomness) for a in self.encrypted_answers],
       'election_hash': self.election_hash,
       'election_uuid': self.election_uuid
     }

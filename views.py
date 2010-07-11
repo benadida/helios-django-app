@@ -327,7 +327,7 @@ def encrypt_ballot(request, election):
   # FIXME: maybe make this just request.POST at some point?
   answers = utils.from_json(request.REQUEST['answers_json'])
   ev = electionalgs.EncryptedVote.fromElectionAndAnswers(election, answers)
-  return ev.toJSONDict()
+  return ev.toJSONDict(with_randomness=True)
     
 @election_view(frozen=True)
 def post_audited_ballot(request, election):
