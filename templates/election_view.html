@@ -5,10 +5,14 @@
 {% if election.voting_has_started %}
 <script>
 if (!navigator.javaEnabled()) {
-  $(document).ready(function() {
-    $('#votelink').hide();
-    $('#nojava_message').show();    
-  });
+//
+// even if Java is not enabled, we now have a server-side solution
+//
+//  $(document).ready(function() {
+//    $('#votelink').hide();
+//    $('#nojava_message').show();    
+//  });
+//
 }
 </script>
 {% endif %}
