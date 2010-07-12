@@ -124,13 +124,15 @@ class EncryptedAnswer(HeliosObject):
   An encrypted answer to a single election question
   """
 
-  FIELDS = ['choices', 'individual_proofs', 'overall_proof', 'randomness']
+  FIELDS = ['choices', 'individual_proofs', 'overall_proof', 'randomness', 'answer']
 
-  def __init__(self, choices=None, individual_proofs=None, overall_proof=None, randomness=None):
+  # FIXME: remove this constructor and use only named-var constructor from HeliosObject
+  def __init__(self, choices=None, individual_proofs=None, overall_proof=None, randomness=None, answer=None):
     self.choices = choices
     self.individual_proofs = individual_proofs
     self.overall_proof = overall_proof
     self.randomness = randomness
+    self.answer = answer
     
   @classmethod
   def generate_plaintexts(cls, pk, min=0, max=1):
@@ -205,6 +207,7 @@ class EncryptedAnswer(HeliosObject):
 
     if with_randomness:
       value['randomness'] = [str(r) for r in self.randomness]
+      value['answer'] = self.answer
     
     return value
     
@@ -296,7 +299,7 @@ class EncryptedAnswer(HeliosObject):
       # approval voting
       overall_proof = None
     
-    return cls(choices, individual_proofs, overall_proof, randomness)
+    return cls(choices, individual_proofs, overall_proof, randomness, answer_indexes)
     
 class EncryptedVote(HeliosObject):
   """
