@@ -96,6 +96,13 @@ class Election(models.Model, electionalgs.Election):
   def num_voters(self):
     return self.voter_set.count()
 
+  @property
+  def encrypted_tally_hash(self):
+    if not self.encrypted_tally:
+      return None
+
+    return utils.hash_b64(self.encrypted_tally.toJSON())
+
   @classmethod
   def get_featured(cls):
     return cls.objects.filter(featured_p = True).order_by('short_name')

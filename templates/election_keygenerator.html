@@ -4,7 +4,15 @@
 
 var PUBLIC_KEY, PROOF;
 
+function clear_keys() {
+    $('#sk_download').hide();
+    $('#pk_form').hide();
+    $('#buttons').show();
+    $('#clear_button').hide();
+}
+
 $(document).ready(function() {
+    clear_keys();
     $('#generator').hide();
     BigInt.setup(function() {
         ELGAMAL_PARAMS = ElGamal.Params.fromJSONObject({{eg_params_json|safe}});
@@ -13,31 +21,21 @@ $(document).ready(function() {
     });
 });
 
-function clear_keys() {
-    $('#sk_textarea').val("");
-    $('#pk_textarea').val("");
-    $('#sk_form').hide();
-    $('#pk_form').hide();
-    $('#buttons').show();
-    $('#clear_button').hide();
-}
+SECRET_KEY = null;
 
 function generate_keypair() {
-    var secret_key;
-    
     $('#buttons').hide();
     
     try {
-        secret_key = ELGAMAL_PARAMS.generate();
+        SECRET_KEY = ELGAMAL_PARAMS.generate();
     } catch (e) {
         alert(e);
     }
     
     // generate PoK of secret key
-    PROOF = secret_key.proveKnowledge(ElGamal.fiatshamir_dlog_challenge_generator);
-    PUBLIC_KEY = secret_key.pk;
+    PROOF = SECRET_KEY.proveKnowledge(ElGamal.fiatshamir_dlog_challenge_generator);
+    PUBLIC_KEY = SECRET_KEY.pk;
 
-    $('#sk_textarea').val(jQuery.toJSON(secret_key));
     var pk_val = jQuery.toJSON({'pok': PROOF, 'public_key': PUBLIC_KEY});
     $('#pk_textarea').val(pk_val);
     $('#pk_hash').html(b64_sha256(jQuery.toJSON(PUBLIC_KEY)));
@@ -47,18 +45,18 @@ function generate_keypair() {
 }
 
 function show_sk() {
-    $('#sk_form').show();
+    $('#sk_download').show();
+}
+
+function download_sk() {
+    UTILS.open_window_with_content(jQuery.toJSON(SECRET_KEY), "application/json");
 }
 
 function show_pk() {
-    $('#sk_form').hide();
+    $('#sk_download').hide();
     $('#pk_hash').show();
     $('#pk_form').show();
 }
-
-$(document).ready(function() {
-    clear_keys();
-});
 
 </script>
 
@@ -76,22 +74,22 @@ $(document).ready(function() {
 
 <span id="buttons"><button onclick="generate_keypair(); return false;" id="generate_button">Generate Election Keys</button></span>
 
+</p>
+
+<div id="sk_download">
+<h3>Your Secret Key</h3>
 <span id="clear_button">
-Your key has been generated, but you may choose to<br />clear it from memory and start from scratch if you prefer.<br />
-<button onclick="clear_keys(); return false;">Clear Keys</button>
+Your key has been generated, but you may choose to<br /><a href="javascript:clear_keys();">clear it from memory and start from scratch</a> if you prefer.<br />
 </span>
 
-<form id="sk_form">
-<h3>Your Secret Key</h3>
-
 <p>
-    Copy this secret key to a safe place.
+    <button style="font-size:16pt;" onclick="download_sk(); $('#pk_link').show();">Download your secret key</button>
 </p>
-<textarea id="sk_textarea" cols="80" rows="10" readonly="readonly">
-</textarea>
-<br />
-<button onclick="show_pk(); return false;">ok, I've copied this to a safe place</button>
-</form>
+
+<p style="display: none;" id="pk_link">
+  <a href="javascript:show_pk();">ok, I've saved the key, let's move on</a>.
+</p>
+</div>
 
 <form method="post" id="pk_form" action="{% url helios.views.trustee_upload_pk election.uuid, trustee.uuid %}">
 <h3>Your Public Key</h3>
