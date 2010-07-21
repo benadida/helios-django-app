@@ -37,7 +37,7 @@ Name
 {{voter.alias}}
 {% else %}
 {{voter.name}} ({{voter.voter_id}})
-{% endif %}</td><td><tt style="font-size: 16pt;">{% if voter.vote_hash %}{{voter.vote_hash}}{% else %}&mdash;{% endif %}</tt></td></tr>
+{% endif %}</td><td><tt style="font-size: 16pt;">{% if voter.vote_hash %}{{voter.vote_hash}} [<a href="{% url helios.views.voter_last_vote election_uuid=election.uuid,voter_uuid=voter.uuid %}">view</a>]{% else %}&mdash;{% endif %}</tt></td></tr>
 {% endfor %}
 </table>
 

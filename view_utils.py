@@ -10,6 +10,9 @@ from django.shortcuts import render_to_response
 
 import utils
 
+# nicely update the wrapper function
+from functools import update_wrapper
+
 from auth.security import get_user
 
 import helios
@@ -66,5 +69,5 @@ def json(func):
     def convert_to_json(self, *args, **kwargs):
       return render_json(utils.to_json(func(self, *args, **kwargs)))
 
-    return convert_to_json
+    return update_wrapper(convert_to_json,func)
     
