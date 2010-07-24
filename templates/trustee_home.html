@@ -8,7 +8,7 @@
 You have successfully uploaded your public key.<br />
 Your public key fingerprint is: <b>{{trustee.public_key_hash}}</b>
 {% else %}
-<a href="{% url helios.views.trustee_keygenerator election.uuid, trustee.uuid %}">generate your key</a>
+<a href="{% url helios.views.trustee_keygenerator election.uuid, trustee.uuid %}">setup your key</a>
 {% endif %}
 </p>
 

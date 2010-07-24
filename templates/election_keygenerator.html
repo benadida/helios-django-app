@@ -9,6 +9,22 @@ function clear_keys() {
     $('#pk_form').hide();
     $('#buttons').show();
     $('#clear_button').hide();
+    $('#reuse').hide();
+}
+
+function show_key_reuse() {
+    $('#generator').hide();
+    $('#reuse').show();
+}
+
+SECRET_KEY = null;
+
+function reuse_key(secret_key_text) {
+    SECRET_KEY = ElGamal.SecretKey.fromJSONObject(jQuery.secureEvalJSON(secret_key_text));
+
+    $('#reuse').hide();
+    setup_public_key_and_proof();
+    show_pk();
 }
 
 $(document).ready(function() {
@@ -21,7 +37,6 @@ $(document).ready(function() {
     });
 });
 
-SECRET_KEY = null;
 
 function generate_keypair() {
     $('#buttons').hide();
@@ -31,7 +46,11 @@ function generate_keypair() {
     } catch (e) {
         alert(e);
     }
-    
+
+    setup_public_key_and_proof();
+}
+
+function setup_public_key_and_proof() {    
     // generate PoK of secret key
     PROOF = SECRET_KEY.proveKnowledge(ElGamal.fiatshamir_dlog_challenge_generator);
     PUBLIC_KEY = SECRET_KEY.pk;
@@ -60,10 +79,10 @@ function show_pk() {
 
 </script>
 
-<h2 class="title">{{election.name}} &mdash; Trustee {{trustee.name}} &mdash; Keypair Generator</h2>
+<h2 class="title">{{election.name}} &mdash; Trustee {{trustee.name}} &mdash; Key Setup</h2>
 
 <p>
-  This is a trustee keypair generator for your election.
+  As a trustee, it's time to set up your key for this election.
 </p>
 
 <p id="waiting_message">
@@ -74,7 +93,23 @@ function show_pk() {
 
 <span id="buttons"><button onclick="generate_keypair(); return false;" id="generate_button">Generate Election Keys</button></span>
 
+<br /><br />
+If you've already generated a keypair, you can <a href="javascript:show_key_reuse()">reuse it</a>.
 </p>
+
+<div id="reuse">
+<h3>Reusing a Key</h3>
+
+<p>
+Enter your complete secret key below:
+</p>
+<form onsubmit="reuse_key(this.secret_key.value); return false;">
+<textarea cols="80" rows="5" wrap="soft" name="secret_key">
+</textarea>
+<br />
+<input type="submit" value="reuse" />
+</form>
+</div>
 
 <div id="sk_download">
 <h3>Your Secret Key</h3>
@@ -94,7 +129,7 @@ Your key has been generated, but you may choose to<br /><a href="javascript:clea
 <form method="post" id="pk_form" action="{% url helios.views.trustee_upload_pk election.uuid, trustee.uuid %}">
 <h3>Your Public Key</h3>
 <p>
-    Now that you have copied your private key to a safe place, it's time to upload the public key to the server.
+    It's time to upload the public key to the server.
 </p>
 <p>
     The fingerprint of your public key is: <tt id="pk_hash" style="font-size: 1.5em; font-weight: bold;"></tt>.<br />
