@@ -6,7 +6,8 @@
 <p>
 {% if trustee.public_key_hash %}
 You have successfully uploaded your public key.<br />
-Your public key fingerprint is: <b>{{trustee.public_key_hash}}</b>
+Your public key fingerprint is: <b>{{trustee.public_key_hash}}</b>.<br />
+You can <a href="{% url helios.views.trustee_check_sk election.uuid, trustee.uuid %}">verify that you have the right secret key</a>.
 {% else %}
 <a href="{% url helios.views.trustee_keygenerator election.uuid, trustee.uuid %}">setup your key</a>
 {% endif %}

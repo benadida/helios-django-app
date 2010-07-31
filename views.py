@@ -293,6 +293,10 @@ def trustee_home(request, election, trustee):
   return render_template(request, 'trustee_home', {'election': election, 'trustee':trustee})
   
 @trustee_check
+def trustee_check_sk(request, election, trustee):
+  return render_template(request, 'trustee_check_sk', {'election': election, 'trustee':trustee})
+  
+@trustee_check
 def trustee_upload_pk(request, election, trustee):
   if request.method == "POST":
     # get the public key and the hash, and add it
