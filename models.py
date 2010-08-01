@@ -461,15 +461,20 @@ class CastVote(models.Model, electionalgs.CastVote):
     return cls.objects.filter(voter = voter).order_by('-cast_at')
 
   def verify_and_store(self):
-    if self.vote.verify(self.voter.election):
+    result = self.vote.verify(self.voter.election)
+
+    if result:
       self.verified_at = datetime.datetime.utcnow()
     else:
       self.invalidated_at = datetime.datetime.utcnow()
       
     # save and store the vote as the voter's last cast vote
     self.save()
-    self.voter.store_vote(self)
+
+    if result:
+      self.voter.store_vote(self)
     
+    return result
     
 class AuditedBallot(models.Model):
   """

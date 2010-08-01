@@ -20,6 +20,8 @@ from view_utils import *
 from auth.security import *
 from auth import views as auth_views
 
+import tasks
+
 from security import *
 from auth.security import get_user
 
@@ -426,18 +428,15 @@ def one_election_cast_confirm(request, election):
     if not user or not voter:
       return HttpResponseRedirect(reverse(one_election_cast_confirm, args=[election.uuid]))
     
-    # we no longer verify the vote here
-    # that is now done asynchronously
-
     # don't store the vote in the voter's data structure until verification
     cast_vote.save()
-    # voter.store_vote(cast_vote)
+
+    # launch the verification task
+    # FIXME: move to a cast vote ID rather than an ORM obj?
+    tasks.cast_vote_verify_and_store.delay(cast_vote = cast_vote)
     
     # remove the vote from the store
     del request.session['encrypted_vote']
-    
-    # send the signal
-    signals.vote_cast.send(sender=election, election=election, user=user, voter=voter, cast_vote=cast_vote)
     
     return HttpResponseRedirect(reverse(one_election_cast_done, args=[election.uuid]))
   
