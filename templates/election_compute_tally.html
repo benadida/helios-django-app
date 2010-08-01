@@ -1,39 +1,6 @@
 {% extends TEMPLATE_BASE %}
 
 {% block content %}
-<script>
-var BATCH_SIZE = 50;
-
-function iterate_batches(after, offset, limit) {
-  // params
-  var params = {
-    'csrf_token': '{{csrf_token}}',
-    'limit': limit};
-    
-  if (after) {
-    params['after'] = after;
-  }
-  
-  // tally
-  $.post('./compute_tally', params, function(next_after){
-    if (next_after != "") {
-      $('#processing').append("tallied " + limit + " ballots (or less if last batch). <br />");
-      iterate_batches(next_after, offset+limit, limit);
-    } else {
-      $('#done').show();
-    }
-  });
-}
-
-function batch_tally() {
-  $('#instructions').hide();
-  
-  $('#processing').append("now tallying voters in batches of " + BATCH_SIZE + "<br />");
-  
-  iterate_batches(null, 0, BATCH_SIZE);
-}
-</script>
-
   <h2 class="title">Compute Tally for Election: {{election.name}}</h2>
 
 <div id="instructions">
@@ -45,7 +12,7 @@ function batch_tally() {
     Once you do this, voters will no longer be able to cast a ballot.
 </p>
 
-<form method="post" action="javascript:batch_tally();" class="pretty">
+<form method="post" action="" onsubmit="alert('ok, tally has begun')" class="pretty">
 <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
     
 <input class="pretty" type="submit" value="compute encrypted tally!" />
@@ -53,11 +20,5 @@ function batch_tally() {
 </form>
 </div>
 
-<div id="processing">
-</div>
-
-<div id="done" style="display:none;">
-  OK, done. <a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>.
-</div>
 <br /><br />
 {% endblock %}

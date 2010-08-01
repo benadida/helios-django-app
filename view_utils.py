@@ -57,6 +57,19 @@ def render_template(request, template_name, vars = {}, include_user=True):
   
   return render_to_response('helios/templates/%s.html' % template_name, vars_with_user)
   
+def render_template_raw(request, template_name, vars={}):
+  t = loader.get_template(template_name)
+  
+  # if there's a request, prep the vars, otherwise can't do it.
+  if request:
+    full_vars = prepare_vars(request, vars)
+  else:
+    full_vars = vars
+
+  c = Context(full_vars)  
+  return t.render(c)
+
+
 def render_json(json_txt):
   return HttpResponse(json_txt)
 

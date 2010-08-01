@@ -1,6 +1,8 @@
 """
 decrypt elections where Helios is trustee
 
+DEPRECATED
+
 Ben Adida
 ben@adida.net
 2010-05-22

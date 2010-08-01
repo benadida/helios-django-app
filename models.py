@@ -192,6 +192,18 @@ class Election(models.Model, electionalgs.Election):
 
   def ready_for_tallying(self):
     return datetime.datetime.utcnow() >= self.tallying_starts_at
+
+  def compute_tally(self):
+    """
+    tally the election, assuming votes already verified
+    """
+    tally = self.init_tally()
+    for voter in self.voter_set.all():
+      if voter.vote:
+        tally.add_vote(voter.vote, verify_p=False)
+
+    self.encrypted_tally = tally
+    self.save()    
   
   def ready_for_decryption(self):
     return self.encrypted_tally != None
@@ -286,9 +298,26 @@ class Election(models.Model, electionalgs.Election):
 
     trustee.save()
 
+  def get_helios_trustee(self):
+    trustees_with_sk = self.trustee_set.exclude(secret_key = None)
+    if len(trustees_with_sk) > 0:
+      return trustees_with_sk[0]
+    else:
+      return None
+    
   def has_helios_trustee(self):
-    num_helios_trustees = len(self.trustee_set.exclude(secret_key = None))
-    return num_helios_trustees > 0
+    return self.get_helios_trustee() != None
+
+  def helios_trustee_decrypt(self):
+    tally = self.encrypted_tally
+    tally.init_election(self)
+
+    trustee = self.get_helios_trustee()
+    factors, proof = tally.decryption_factors_and_proofs(trustee.secret_key)
+
+    trustee.decryption_factors = factors
+    trustee.decryption_proofs = proof
+    trustee.save()
 
   def append_log(self, text):
     item = ElectionLog(election = self, log=text, at=datetime.datetime.utcnow())

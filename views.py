@@ -658,44 +658,12 @@ def one_election_compute_tally(request, election):
   
   check_csrf(request)
 
-  limit = after = None
-  if request.POST.has_key('limit'):
-    limit = int(request.POST['limit'])
-  if request.POST.has_key('after'):
-    after = request.POST['after']
+  election.tallying_started_at = datetime.datetime.utcnow()
+  election.save()
 
-  # pull out the subset of voters
-  # some may not have cast a ballot
-  voters = Voter.get_by_election(election, order_by='voter_id', limit=limit, after=after)
-  
-  # if we have "after", then we should have the tally stored in memcache
-  if after != None:
-    tally_key = "TALLY-%s-%s" % (election.uuid, after)
-    tally = request.session[tally_key]
-    if not tally:
-      raise Exception("problem tallying, try again")
-    del request.session[tally_key]
-  else:
-    tally = election.init_tally()
-  
-  # did we get some voters?
-  if len(voters) > 0:
-    # get the votes and set the public key
-    votes = [v.vote for v in voters if v.vote != None]
-    tally.add_vote_batch(votes, verify_p=False)
-    
-    # store in memcache
-    next_after = voters[len(voters)-1].voter_id
-    tally_key = "TALLY-%s-%s" % (election.uuid, next_after)
-    request.session[tally_key]= tally
-    
-    return HttpResponse(next_after)
-  else:
-    # if we had no more voters, than we are done
-    election.encrypted_tally = tally
-    election.save()
+  tasks.election_compute_tally(election)
 
-    return HttpResponse("")
+  return HttpResponseRedirect(reverse(one_election_view,args=[election.uuid]))
 
 @trustee_check
 def trustee_decrypt_and_prove(request, election, trustee):
@@ -836,54 +804,22 @@ def voters_email(request, election):
         after = request.POST['after']
 
       # the client knows to submit only once with a specific voter_id
-      if voter:
-        voters = [voter]
-      else:
-        # go through a subset of the voters
-        voters = Voter.get_by_election(election, order_by='voter_id', limit=limit, after=after)
+      subject_template = 'email/vote_subject.txt'
+      body_template = 'email/vote_body.txt'
       
-      for voter in voters:        
-        user = voter.user
-        body = """
-Dear %s,
-
-""" % voter.name
-
-        body += email_form.cleaned_data['body'] + """
+      extra_vars = {
+        'custom_message' : email_form.cleaned_data['body'],
+        'election_url' : get_election_url(election)
+        }
         
-Election URL:  %s
-Election Fingerprint:  %s
-Your username: %s
-Your password: %s
-""" % (get_election_url(election), election.hash, user.user_id, user.info['password'])
 
-        if election.use_voter_aliases:
-          body+= """
-Your voter alias: %s
+      if voter:
+        tasks.single_voter_email.delay(voter = voter, subject_template = subject_template, body_template = body_template, extra_vars = extra_vars)
+      else:
+        tasks.voters_email.delay(election = election, subject_template = subject_template, body_template = body_template, extra_vars = extra_vars)
 
-In order to protect your privacy, this election is configured
-to never display your username, name, or email address to the public.
-Instead, the ballot tracking center will only display your alias.
-
-IMPORTANTLY, when you are prompted to log in to vote,
-please use your *username*, not your alias.
-""" % voter.alias
-
-        body += """
-
---
-Helios
-"""
-
-        # this is email for most users
-        user.send_message(email_form.cleaned_data['subject'], body)
-      
-      # now a batch process, will just return OK
-      #return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
-      return_value = ""
-      if len(voters) > 0:
-        return_value = simplejson.dumps({'last_voter_id': voters[-1].voter_id, 'num_emailed': len(voters)})
-      return HttpResponse(return_value)
+      # this batch process is all async, so we can return a nice note
+      return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
     
   return render_template(request, "voters_email", {'email_form': email_form, 'election': election, 'voter': voter})    
 
