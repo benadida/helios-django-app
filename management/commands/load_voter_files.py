@@ -1,6 +1,8 @@
 """
 parse and set up voters from uploaded voter files
 
+DEPRECATED
+
 Ben Adida
 ben@adida.net
 2010-05-22

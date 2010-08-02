@@ -19,6 +19,8 @@ import helios
 # useful stuff in auth
 from auth.models import User, AUTH_SYSTEMS
 from auth.jsonfield import JSONField
+
+import csv
   
 # global counters
 GLOBAL_COUNTER_VOTERS = 'global_counter_voters'
@@ -144,6 +146,8 @@ class Election(models.Model, electionalgs.Election):
     new_voter_file = VoterFile(election = self)
     new_voter_file.voter_file.save(random_filename, uploaded_file)
     self.append_log(ElectionLog.VOTER_FILE_ADDED)
+
+    return new_voter_file
   
   def user_eligible_p(self, user):
     """
@@ -344,6 +348,22 @@ class ElectionLog(models.Model):
   log = models.CharField(max_length=500)
   at = models.DateTimeField(auto_now_add=True)
 
+##
+## UTF8 craziness for CSV
+##
+
+def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
+    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
+    csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
+                            dialect=dialect, **kwargs)
+    for row in csv_reader:
+        # decode UTF-8 back to Unicode, cell by cell:
+        yield [unicode(cell, 'utf-8') for cell in row]
+
+def utf_8_encoder(unicode_csv_data):
+    for line in unicode_csv_data:
+        yield line.encode('utf-8')
+  
 class VoterFile(models.Model):
   """
   A model to store files that are lists of voters to be processed
@@ -357,6 +377,51 @@ class VoterFile(models.Model):
   processing_started_at = models.DateTimeField(auto_now_add=False, null=True)
   processing_finished_at = models.DateTimeField(auto_now_add=False, null=True)
   num_voters = models.IntegerField(null=True)
+
+  def process(self):
+    self.processing_started_at = datetime.datetime.utcnow()
+    self.save()
+
+    election = self.election
+    reader = unicode_csv_reader(self.voter_file)
+    
+    num_voters = 0
+    for voter in reader:
+      # bad line
+      if len(voter) < 1:
+        continue
+    
+      num_voters += 1
+      voter_id = voter[0]
+      name = voter_id
+      email = voter_id
+    
+      if len(voter) > 1:
+        email = voter[1]
+    
+      if len(voter) > 2:
+        name = voter[2]
+    
+      # create the user
+      user = User.update_or_create(user_type='password', user_id=voter_id, info = {'password': heliosutils.random_string(10), 'email': email, 'name': name})
+      user.save()
+    
+      # does voter for this user already exist
+      voter = Voter.get_by_election_and_user(election, user)
+    
+      # create the voter
+      if not voter:
+        voter_uuid = str(uuid.uuid1())
+        voter = Voter(uuid= voter_uuid, voter_type = 'password', voter_id = voter_id, name = name, election = election)
+        voter.save()
+
+    self.num_voters = num_voters
+    self.processing_finished_at = datetime.datetime.utcnow()
+    self.save()
+
+    return num_voters
+
+
     
 class Voter(models.Model, electionalgs.Voter):
   election = models.ForeignKey(Election)

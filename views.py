@@ -779,7 +779,11 @@ def voters_upload(request, election):
   if request.method == "POST":
     # we store the file away for future processing
     voters_file = request.FILES['voters_file']
-    election.add_voters_file(voters_file)
+    voter_file_obj = election.add_voters_file(voters_file)
+
+    # launch the background task to parse that file
+    tasks.voter_file_process.delay(voter_file = voter_file_obj)
+
     return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
 
 @election_admin(frozen=True)

@@ -58,3 +58,7 @@ def election_compute_tally(election):
 @task()
 def tally_helios_decrypt(election):
     election.helios_trustee_decrypt()
+
+@task()
+def voter_file_process(voter_file):
+    voter_file.process()
