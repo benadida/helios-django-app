@@ -433,7 +433,7 @@ def one_election_cast_confirm(request, election):
 
     # launch the verification task
     # FIXME: move to a cast vote ID rather than an ORM obj?
-    tasks.cast_vote_verify_and_store.delay(cast_vote = cast_vote)
+    tasks.cast_vote_verify_and_store.delay(cast_vote_id = cast_vote.id)
     
     # remove the vote from the store
     del request.session['encrypted_vote']
@@ -658,10 +658,13 @@ def one_election_compute_tally(request, election):
   
   check_csrf(request)
 
+  if not election.voting_ended_at:
+    election.voting_ended_at = datetime.datetime.utcnow()
+
   election.tallying_started_at = datetime.datetime.utcnow()
   election.save()
 
-  tasks.election_compute_tally(election)
+  tasks.election_compute_tally.delay(election_id = election.id)
 
   return HttpResponseRedirect(reverse(one_election_view,args=[election.uuid]))
 
@@ -782,7 +785,7 @@ def voters_upload(request, election):
     voter_file_obj = election.add_voters_file(voters_file)
 
     # launch the background task to parse that file
-    tasks.voter_file_process.delay(voter_file = voter_file_obj)
+    tasks.voter_file_process.delay(voter_file_id = voter_file_obj.id)
 
     return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
 
@@ -818,9 +821,9 @@ def voters_email(request, election):
         
 
       if voter:
-        tasks.single_voter_email.delay(voter = voter, subject_template = subject_template, body_template = body_template, extra_vars = extra_vars)
+        tasks.single_voter_email.delay(voter_uuid = voter.uuid, subject_template = subject_template, body_template = body_template, extra_vars = extra_vars)
       else:
-        tasks.voters_email.delay(election = election, subject_template = subject_template, body_template = body_template, extra_vars = extra_vars)
+        tasks.voters_email.delay(election_id = election.id, subject_template = subject_template, body_template = body_template, extra_vars = extra_vars)
 
       # this batch process is all async, so we can return a nice note
       return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
