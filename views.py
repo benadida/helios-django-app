@@ -48,7 +48,7 @@ from django.conf import settings
 
 # a helper function
 def get_election_url(election):
-  return settings.URL_HOST + reverse(one_election_view, args=[election.uuid])  
+  return settings.URL_HOST + reverse(election_shortcut, args=[election.short_name])  
 
 # simple static views
 def home(request):
@@ -804,12 +804,6 @@ def voters_email(request, election):
     
     if email_form.is_valid():
       
-      limit = after = None
-      if request.POST.has_key('limit'):
-        limit = int(request.POST['limit'])
-      if request.POST.has_key('after'):
-        after = request.POST['after']
-
       # the client knows to submit only once with a specific voter_id
       subject_template = 'email/vote_subject.txt'
       body_template = 'email/vote_body.txt'
