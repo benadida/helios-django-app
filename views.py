@@ -420,8 +420,14 @@ def one_election_cast_confirm(request, election):
     else:
       status_update_message = None
 
+    # do we need to constrain the auth_systems?
+    if election.eligibility:
+      auth_systems = [e['auth_system'] for e in election.eligibility]
+    else:
+      auth_systems = None
+
     return_url = reverse(one_election_cast_confirm, args=[election.uuid])
-    login_box = auth_views.login_box_raw(request, return_url=return_url)
+    login_box = auth_views.login_box_raw(request, return_url=return_url, auth_systems = auth_systems)
     return render_template(request, 'election_cast_confirm', {'login_box': login_box, 'election' : election, 'vote_fingerprint': vote_fingerprint, 'past_votes': past_votes, 'issues': issues, 'voter' : voter, 'status_update_message': status_update_message})
       
   if request.method == "POST":

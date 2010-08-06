@@ -20,7 +20,7 @@ import helios
 from auth.models import User, AUTH_SYSTEMS
 from auth.jsonfield import JSONField
 
-import csv
+import csv, copy
   
 # global counters
 GLOBAL_COUNTER_VOTERS = 'global_counter_voters'
@@ -240,9 +240,11 @@ class Election(models.Model, electionalgs.Election):
   def generate_voters_hash(self):
     """
     look up the list of voters, make a big file, and hash it
-    FIXME: for more than 1000 voters, need to loop multiple times
-    FIXME: is this even used anymore?
     """
+
+    # FIXME: for now we don't generate this voters hash:
+    return
+
     if self.openreg:
       self.voters_hash = None
     else:
@@ -258,6 +260,35 @@ class Election(models.Model, electionalgs.Election):
     ## FIXME
     return 0
         
+  def set_eligibility(self):
+    """
+    if registration is closed and eligibility has not been
+    already set, then this call sets the eligibility criteria
+    based on the actual list of voters who are already there.
+
+    This helps ensure that the login box shows the proper options.
+
+    If registration is open but no voters have been added with password,
+    then that option is also canceled out to prevent confusion, since
+    those elections usually just use the existing login systems.
+    """
+
+    # don't override existing eligibility
+    if self.eligibility != None:
+      return
+
+    auth_systems = copy.copy(settings.AUTH_ENABLED_AUTH_SYSTEMS)
+    voter_types = [r['voter_type'] for r in self.voter_set.values('voter_type').distinct()]
+
+    if self.openreg:
+      if not 'password' in voter_types:
+        auth_systems.remove('password')
+    else:
+      auth_systems = [vt for vt in voter_types if vt in auth_systems]
+
+    self.eligibility = [{'auth_system': auth_system} for auth_system in auth_systems]
+    self.save()    
+    
   def freeze(self):
     """
     election is frozen when the voter registration, questions, and trustees are finalized
@@ -266,6 +297,8 @@ class Election(models.Model, electionalgs.Election):
     
     # voters hash
     self.generate_voters_hash()
+
+    self.set_eligibility()
     
     # public key for trustees
     trustees = Trustee.get_by_election(self)

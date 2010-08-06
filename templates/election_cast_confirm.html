@@ -91,10 +91,13 @@ function show_waiting() {
 
 {% else %}
 <p>
-  Now, we need you to log in, so we can verify your eligibility.
+  Now, we need you to log in, so we can verify your eligibility.<br />
+{% if election.openreg %}
+This election is open to <em>anyone</em>, so log in with your preferred account.
+{% else %}
+This election is only open to <em>registered voters</em>, so log in with the same account you registered with or with the username and password you received by email.
+{% endif %}
 </p>
-
-<br />
 
 {{login_box|safe}}
 <!--
