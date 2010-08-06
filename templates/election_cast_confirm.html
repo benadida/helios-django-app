@@ -51,7 +51,7 @@ function show_waiting() {
 <input type="checkbox" name="status_update" value="1" checked /> {{status_update_message}}<br /><br />
 {% endif %}
 
-    <input type="submit" value="I am {{user.pretty_name}}, cast this ballot" style="font-size: 1.5em;" />
+    <button type="submit" style="font-size: 1.5em;">I am <img border="0" height="20" src="/static/auth/login-icons/{{user.user_type}}.png" alt="{{user.user_type}}" /> {{user.pretty_name}}, cast this ballot</button>
     <span style="font-size:0.8em;"><br />You can cast as many ballots as you want.<br />Only the last one counts.</span>
 </form>
 
