@@ -83,7 +83,11 @@ def election_view(**checks):
   return election_view_decorator
 
 def user_can_admin_election(user, election):
-  return election.admin == user
+  if not user:
+    return False
+
+  # election or site administrator
+  return election.admin == user or user.admin_p
   
 def api_client_can_admin_election(api_client, election):
   return election.api_client == api_client and api_client != None
@@ -98,7 +102,7 @@ def election_admin(**checks):
       election = get_election_by_uuid(election_uuid)
 
       user = get_user(request)
-      if not user or not (user == election.admin):
+      if not user_can_admin_election(user, election):
         raise PermissionDenied()
         
       # do checks
@@ -132,4 +136,10 @@ def can_create_election(request):
     return user.admin_p
   else:
     return user != None
+  
+def user_can_feature_election(user, election):
+  if not user:
+    return False
+    
+  return user.admin_p
   

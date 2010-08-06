@@ -18,6 +18,7 @@ from crypto import utils as cryptoutils
 from helios import utils as helios_utils
 from view_utils import *
 from auth.security import *
+from helios import security
 from auth import views as auth_views
 
 import tasks
@@ -186,7 +187,8 @@ def one_election(request, election):
 @election_view()
 def one_election_view(request, election):
   user = get_user(request)
-  admin_p = user and (user == election.admin)
+  admin_p = security.user_can_admin_election(user, election)
+  can_feature_p = security.user_can_feature_election(user, election)
   
   notregistered = False
   
@@ -208,7 +210,7 @@ def one_election_view(request, election):
     
   trustees = Trustee.get_by_election(election)
     
-  return render_template(request, 'election_view', {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'eligible_p': eligible_p})
+  return render_template(request, 'election_view', {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'eligible_p': eligible_p, 'can_feature_p': can_feature_p})
   
 ##
 ## Trustees and Public Key
@@ -554,6 +556,11 @@ def one_election_set_featured(request, election):
   """
   Set whether this is a featured election or not
   """
+
+  user = get_user(request)
+  if not security.user_can_feature_election(user, election):
+    raise PermissionDenied()
+
   featured_p = bool(int(request.GET['featured_p']))
   election.featured_p = featured_p
   election.save()
