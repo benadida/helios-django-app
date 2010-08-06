@@ -412,9 +412,15 @@ def one_election_cast_confirm(request, election):
     else:
       issues = None
 
+    # status update this vote
+    if user and user.can_update_status():
+      status_update_message = voter.user.update_status_template() % "your vote tracker"
+    else:
+      status_update_message = None
+
     return_url = reverse(one_election_cast_confirm, args=[election.uuid])
     login_box = auth_views.login_box_raw(request, return_url=return_url)
-    return render_template(request, 'election_cast_confirm', {'login_box': login_box, 'election' : election, 'vote_fingerprint': vote_fingerprint, 'past_votes': past_votes, 'issues': issues, 'voter' : voter})
+    return render_template(request, 'election_cast_confirm', {'login_box': login_box, 'election' : election, 'vote_fingerprint': vote_fingerprint, 'past_votes': past_votes, 'issues': issues, 'voter' : voter, 'status_update_message': status_update_message})
       
   if request.method == "POST":
     check_csrf(request)
@@ -432,8 +438,7 @@ def one_election_cast_confirm(request, election):
     cast_vote.save()
 
     # launch the verification task
-    # FIXME: move to a cast vote ID rather than an ORM obj?
-    tasks.cast_vote_verify_and_store.delay(cast_vote_id = cast_vote.id)
+    tasks.cast_vote_verify_and_store.delay(cast_vote_id = cast_vote.id, status_update = request.POST.get('status_update', None))
     
     # remove the vote from the store
     del request.session['encrypted_vote']

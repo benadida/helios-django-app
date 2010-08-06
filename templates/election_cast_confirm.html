@@ -47,6 +47,10 @@ function show_waiting() {
 <form method="post" action="" onsubmit="show_waiting()">
     <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
     
+{% if status_update_message %}
+<input type="checkbox" name="status_update" value="1" checked /> {{status_update_message}}<br /><br />
+{% endif %}
+
     <input type="submit" value="I am {{user.pretty_name}}, cast this ballot" style="font-size: 1.5em;" />
     <span style="font-size:0.8em;"><br />You can cast as many ballots as you want.<br />Only the last one counts.</span>
 </form>
