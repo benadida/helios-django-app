@@ -14,9 +14,11 @@
 {% endif %}
 </p>
 
+<!--
 <p>
 <u>Eligibility</u>: [more to come]
 </p>
+-->
 
 {% if email_voters and election.frozen_at and admin_p %}
 <p><a href="{% url helios.views.voters_email election.uuid %}">email voters</a></p>
@@ -72,7 +74,6 @@ Voters {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
 <table class="pretty">
 <tr>
 {% if admin_p or not election.use_voter_aliases %}
-<th>Username</th>
 <th>Name</th>
 {% endif %}
 
@@ -83,13 +84,12 @@ Voters {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
 {% for voter in voters %}
 <tr>
 {% if admin_p or not election.use_voter_aliases %}
-<td>{{voter.voter_id}}
+<td>
 {% if election.frozen_at or not admin_p %}
 {% else %}
 [<a onclick="return confirm('are you sure you want to remove {{voter.name}} ?');" href="{% url helios.views.voter_delete election.uuid, voter.uuid %}">x</a>]
 {% endif %}
-</td>
-<td>{{voter.name}}</td>
+<img border="0" height="20" src="/static/auth/login-icons/{{voter.voter_type}}.png" alt="{{voter.voter_type}}" /> {{voter.name}}</td>
 {% endif %}
 {% if election.use_voter_aliases %}
 <td>{{voter.alias}}</td>
