@@ -57,6 +57,10 @@ class Election(models.Model, electionalgs.Election):
   
   # where votes should be cast
   cast_url = models.CharField(max_length = 500)
+
+  # dates at which this was touched
+  created_at = models.DateTimeField(auto_now_add=True)
+  modified_at = models.DateTimeField(auto_now_add=True)
   
   # dates at which things happen for the election
   frozen_at = models.DateTimeField(auto_now_add=False, default=None, null=True)
@@ -118,6 +122,7 @@ class Election(models.Model, electionalgs.Election):
     query = cls.objects.filter(admin = user)
     if include_archived:
       query = query.filter('archived_at', None)
+    query = query.order_by('-created_at')
     return query
     
   @classmethod
@@ -535,7 +540,7 @@ class Voter(models.Model, electionalgs.Voter):
 
   @classmethod
   def get_by_user(cls, user):
-    return cls.objects.filter(voter_type = user.user_type, voter_id = user.user_id)
+    return cls.objects.filter(voter_type = user.user_type, voter_id = user.user_id).order_by('-cast_at')
 
   @property
   def user(self):
