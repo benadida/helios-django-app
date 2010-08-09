@@ -43,8 +43,15 @@ Your smart ballot tracker is:<br /><br />
 <form method="post" action="" onsubmit="show_waiting()">
     <input type="hidden" name="csrf_token" value="{{csrf_token}}" />
     
-{% if status_update_message %}
-<input type="checkbox" name="status_update" value="1" checked /> {{status_update_message}}<br /><br />
+{% if status_update_label %}
+<div class="round" style="background: #eee; padding: 10px; border: 1px dashed #888;">
+<input type="checkbox" name="status_update" value="1" checked /> {{status_update_label}}<br />
+<blockquote style="font-size: 1.3em;">
+"{{status_update_message}}"
+</blockquote>
+<input type="hidden" name="status_update_message" value="{{status_update_message}}" />
+</div>
+<br />
 {% endif %}
 
     <button type="submit" style="font-size: 1.5em; height: 50px;">I am <u>{{user.display_html_big|safe}}</u>, cast this ballot</button>

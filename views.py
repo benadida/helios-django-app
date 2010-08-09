@@ -416,8 +416,10 @@ def one_election_cast_confirm(request, election):
 
     # status update this vote
     if voter and user and user.can_update_status():
-      status_update_message = voter.user.update_status_template() % "your smart ballot tracker"
+      status_update_label = voter.user.update_status_template() % "your smart ballot tracker"
+      status_update_message = "I voted in %s, my smart tracker is %s.. -- %s" % (election.name, cast_vote.vote_hash[:10], get_election_url(election))
     else:
+      status_update_label = None
       status_update_message = None
 
     # do we need to constrain the auth_systems?
@@ -428,7 +430,11 @@ def one_election_cast_confirm(request, election):
 
     return_url = reverse(one_election_cast_confirm, args=[election.uuid])
     login_box = auth_views.login_box_raw(request, return_url=return_url, auth_systems = auth_systems)
-    return render_template(request, 'election_cast_confirm', {'login_box': login_box, 'election' : election, 'vote_fingerprint': vote_fingerprint, 'past_votes': past_votes, 'issues': issues, 'voter' : voter, 'status_update_message': status_update_message})
+
+    return render_template(request, 'election_cast_confirm', {
+        'login_box': login_box, 'election' : election, 'vote_fingerprint': vote_fingerprint,
+        'past_votes': past_votes, 'issues': issues, 'voter' : voter,
+        'status_update_label': status_update_label, 'status_update_message': status_update_message})
       
   if request.method == "POST":
     check_csrf(request)
@@ -445,8 +451,16 @@ def one_election_cast_confirm(request, election):
     # don't store the vote in the voter's data structure until verification
     cast_vote.save()
 
+    # status update?
+    if request.POST.get('status_update', False):
+      status_update_message = request.POST.get('status_update_message')
+    else:
+      status_update_message = None
+
     # launch the verification task
-    tasks.cast_vote_verify_and_store.delay(cast_vote_id = cast_vote.id, status_update = request.POST.get('status_update', None))
+    tasks.cast_vote_verify_and_store.delay(
+      cast_vote_id = cast_vote.id,
+      status_update_message = status_update_message)
     
     # remove the vote from the store
     del request.session['encrypted_vote']
