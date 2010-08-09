@@ -10,7 +10,7 @@ from django.db import models
 from django.utils import simplejson
 from django.conf import settings
 
-import datetime, logging, uuid
+import datetime, logging, uuid, random
 
 from crypto import electionalgs, algs, utils
 from helios import utils as heliosutils
@@ -423,7 +423,10 @@ class VoterFile(models.Model):
     election = self.election
     reader = unicode_csv_reader(self.voter_file)
     
+    num_voters_before = election.num_voters
+
     num_voters = 0
+    voter_uuids = []
     for voter in reader:
       # bad line
       if len(voter) < 1:
@@ -451,6 +454,15 @@ class VoterFile(models.Model):
       if not voter:
         voter_uuid = str(uuid.uuid1())
         voter = Voter(uuid= voter_uuid, voter_type = 'password', voter_id = voter_id, name = name, election = election)
+        voter_uuids.append(voter_uuid)
+        voter.save()
+
+    if election.use_voter_aliases:
+      voter_alias_integers = range(num_voters_before+1, num_voters_before+1+num_voters)
+      random.shuffle(voter_alias_integers)
+      for i, voter_uuid in enumerate(voter_uuids):
+        voter = Voter.get_by_election_and_uuid(election, voter_uuid)
+        voter.alias = 'V%s' % voter_alias_integers[i]
         voter.save()
 
     self.num_voters = num_voters
