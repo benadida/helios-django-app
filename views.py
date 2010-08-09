@@ -416,7 +416,7 @@ def one_election_cast_confirm(request, election):
 
     # status update this vote
     if voter and user and user.can_update_status():
-      status_update_message = voter.user.update_status_template() % "your vote tracker"
+      status_update_message = voter.user.update_status_template() % "your smart ballot tracker"
     else:
       status_update_message = None
 

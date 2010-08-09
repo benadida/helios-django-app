@@ -15,16 +15,12 @@ function show_waiting() {
 <h1>{{election.name}} &mdash; Submit your Vote</h1>
 
 <p>
-  We have received, <b><u>but not yet recorded</u></b>, your encrypted ballot with tracking number:<br /><br />
+  We have received, <b><u>but not yet recorded</u></b>, your encrypted ballot.<br />
+Your smart ballot tracker is:<br /><br />
     <tt style="font-size:1.8em; font-weight: bold; padding-left: 20px;">  {{vote_fingerprint}}</tt>
 </p>
 
 {% if user %}
-<p>
-  You are logged in as 
-<span style="font-size: 1.4em; text-decoration:underline;">
-    {{user.pretty_name}}</span>.
-</p>
 
 {% if voter %}
 {% if past_votes %}
