@@ -61,14 +61,14 @@ def home(request):
   
   return render_template(request, "index", {'elections' : elections})
   
-def learn(request):
-  return render_template(request, "learn")
-  
-def faq(request):
-  return render_template(request, "faq")
-  
-def about(request):
-  return HttpResponse(request, "about")
+def stats(request):
+  user = get_user(request)
+  if not user or not user.admin_p:
+    raise PermissionDenied()
+
+  elections = Election.objects.all().order_by('-created_at')[:25]
+
+  return render_template(request, "stats", {'elections' : elections})
     
 ##
 ## General election features

@@ -9,7 +9,7 @@ urlpatterns = None
 
 urlpatterns = patterns('',
   (r'^$', home),
-  (r'^about$', about),
+  (r'^stats$', stats),
 
   # election shortcut by shortname
   (r'^e/(?P<election_short_name>[^/]+)$', election_shortcut),
