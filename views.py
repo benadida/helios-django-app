@@ -428,13 +428,19 @@ def one_election_cast_confirm(request, election):
     else:
       auth_systems = None
 
+    if auth_systems == ['password']:
+      password_only = True
+    else:
+      password_only = False
+
     return_url = reverse(one_election_cast_confirm, args=[election.uuid])
     login_box = auth_views.login_box_raw(request, return_url=return_url, auth_systems = auth_systems)
 
     return render_template(request, 'election_cast_confirm', {
         'login_box': login_box, 'election' : election, 'vote_fingerprint': vote_fingerprint,
         'past_votes': past_votes, 'issues': issues, 'voter' : voter,
-        'status_update_label': status_update_label, 'status_update_message': status_update_message})
+        'status_update_label': status_update_label, 'status_update_message': status_update_message,
+        'password_only': password_only})
       
   if request.method == "POST":
     check_csrf(request)

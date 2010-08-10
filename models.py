@@ -329,7 +329,7 @@ class Election(models.Model, electionalgs.Election):
     # create the trustee
     trustee = Trustee(election = self)
     trustee.uuid = str(uuid.uuid1())
-    trustee.name = 'Helios'
+    trustee.name = settings.DEFAULT_FROM_NAME
     trustee.email = settings.DEFAULT_FROM_EMAIL
     trustee.public_key = keypair.pk
     trustee.secret_key = keypair.sk
