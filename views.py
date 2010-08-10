@@ -740,6 +740,16 @@ def trustee_upload_decryption(request, election, trustee_uuid):
 def combine_decryptions(request, election):
   election.combine_decryptions()
   election.save()
+
+  # notify voters!
+  extra_vars = {
+    'election_url' : get_election_url(election)
+    }
+        
+  tasks.voters_email.delay(election_id = election.id,
+                           subject_template = 'email/result_subject.txt',
+                           body_template = 'email/result_body.txt',
+                           extra_vars = extra_vars)
   
   return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
 
