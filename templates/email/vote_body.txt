@@ -1,6 +1,6 @@
 Dear {{voter.name}},
 
-{{custom_message}}
+{{custom_message|safe}}
 
 Election URL:  {{election_url}}
 Election Fingerprint:  {{voter.election.hash}}
