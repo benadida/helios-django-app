@@ -49,7 +49,7 @@ from django.conf import settings
 
 # a helper function
 def get_election_url(election):
-  return settings.URL_HOST + reverse(election_shortcut, args=[election.short_name])  
+  return settings.SECURE_URL_HOST + reverse(election_shortcut, args=[election.short_name])  
 
 # simple static views
 def home(request):
@@ -130,7 +130,7 @@ def election_new(request):
       # is the short name valid
       if helios_utils.urlencode(election_params['short_name']) == election_params['short_name']:      
         election_params['uuid'] = str(uuid.uuid1())
-        election_params['cast_url'] = settings.URL_HOST + reverse(one_election_cast, args=[election_params['uuid']])
+        election_params['cast_url'] = settings.SECURE_URL_HOST + reverse(one_election_cast, args=[election_params['uuid']])
       
         # registration starts closed
         election_params['openreg'] = False
@@ -273,7 +273,7 @@ def trustee_login(request, election_short_name, trustee_email, trustee_secret):
 def trustee_send_url(request, election, trustee_uuid):
   trustee = Trustee.get_by_election_and_uuid(election, trustee_uuid)
   
-  url = settings.URL_HOST + reverse(trustee_login, args=[election.short_name, trustee.email, trustee.secret])
+  url = settings.SECURE_URL_HOST + reverse(trustee_login, args=[election.short_name, trustee.email, trustee.secret])
   
   body = """
 
@@ -360,7 +360,8 @@ def one_election_cast(request, election):
   user = get_user(request)    
   encrypted_vote = request.POST['encrypted_vote']
   request.session['encrypted_vote'] = encrypted_vote
-  return HttpResponseRedirect(reverse(one_election_cast_confirm, args=[election.uuid]))
+  
+  return HttpResponseRedirect("%s%s" % (settings.URL_HOST, reverse(one_election_cast_confirm, args=[election.uuid])))
   
 @election_view(frozen=True)
 def one_election_cast_confirm(request, election):
