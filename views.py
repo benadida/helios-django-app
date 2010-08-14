@@ -24,7 +24,7 @@ from auth import views as auth_views
 import tasks
 
 from security import *
-from auth.security import get_user
+from auth.security import get_user, save_in_session_across_logouts
 
 import uuid, datetime
 
@@ -359,8 +359,9 @@ def one_election_cast(request, election):
     
   user = get_user(request)    
   encrypted_vote = request.POST['encrypted_vote']
-  request.session['encrypted_vote'] = encrypted_vote
-  
+
+  save_in_session_across_logouts(request, 'encrypted_vote', encrypted_vote)
+
   return HttpResponseRedirect("%s%s" % (settings.URL_HOST, reverse(one_election_cast_confirm, args=[election.uuid])))
   
 @election_view(frozen=True)
@@ -482,12 +483,13 @@ def one_election_cast_done(request, election):
 
   logout = settings.LOGOUT_ON_CONFIRMATION
   
-  #if logout:
-  #  request.session.flush()
+  # local logout ensures that there's no more
+  # user locally
+  if logout:
+    auth_views.do_local_logout(request)
     
-  # we suppress the user information because we're claiming logout, even though
-  # logout is happening asynchronously in an iframe to be modular given the logout mechanism
-  return render_template(request, 'cast_done', {'election': election, 'last_vote': votes[0], 'logout': logout}, include_user=False)
+  # remote logout is happening asynchronously in an iframe to be modular given the logout mechanism
+  return render_template(request, 'cast_done', {'election': election, 'last_vote': votes[0], 'logout': logout})
 
 @election_view()
 @json
