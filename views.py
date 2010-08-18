@@ -191,8 +191,10 @@ def one_election_view(request, election):
   can_feature_p = security.user_can_feature_election(user, election)
   
   notregistered = False
-  
   eligible_p = True
+  
+  election_url = get_election_url(election)
+  status_update_message = None
   
   if user:
     voter = Voter.get_by_election_and_user(election, user)
@@ -207,10 +209,25 @@ def one_election_view(request, election):
   else:
     voter = None
     votes = None
+
+  # status update message?
+  if election.openreg:
+    if election.voting_has_started:
+      status_update_message = "Vote in %s" % election.name
+    else:
+      status_update_message = "Register to vote in %s" % election.name
+
+  # result!
+  if election.result:
+    status_update_message = "Results are in for %s" % election.name
     
   trustees = Trustee.get_by_election(election)
     
-  return render_template(request, 'election_view', {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user, 'voter': voter, 'votes': votes, 'notregistered': notregistered, 'eligible_p': eligible_p, 'can_feature_p': can_feature_p})
+  return render_template(request, 'election_view',
+                         {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user,
+                          'voter': voter, 'votes': votes, 'notregistered': notregistered, 'eligible_p': eligible_p,
+                          'can_feature_p': can_feature_p, 'election_url' : election_url,
+                          'status_update_message' : status_update_message})
   
 ##
 ## Trustees and Public Key

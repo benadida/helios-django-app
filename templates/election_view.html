@@ -16,6 +16,7 @@ if (!navigator.javaEnabled()) {
 }
 </script>
 {% endif %}
+<div style="float: left; margin-right: 50px;">
   <h2 class="title">{{ election.name }}
 {% if admin_p %}
 {% if not election.frozen_at %}
@@ -39,9 +40,22 @@ this election is <u>not</u> featured on the front page.
 {% endif %}
 </p>
 
+</div>
+
+
+<br /><br />
+<span style="margin: 20px;">
+<a name="fb_share" type="box_count" share_url="{{election_url}}" href="http://www.facebook.com/sharer.php?t={{status_update_message|urlencode}}">Share</a><script src="http://static.ak.fbcdn.net/connect.php/js/FB.Share" type="text/javascript"></script></span>
+
+<a href="http://twitter.com/share" class="twitter-share-button" data-url="{{election_url}}" data-text="{{status_update_message}}" data-count="none" data-via="heliosvoting">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+
+
+<br clear="left" />
+
 <div style="margin-bottom: 25px;margin-left: 15px; border-left: 1px solid #aaa; padding-left: 5px; font-size:1.3em; ">
 {{election.description}}
 </div>
+
 
 <p align="center" style="font-size: 1.5em;">
 <a href="{% url helios.views.one_election_questions election.uuid %}">questions ({% if election.questions %}{{election.questions|length}}{% else %}0{% endif %})</a>
@@ -104,6 +118,7 @@ Once you do this, the tally will be immediately available for all to see.
 {% endif %}
 
 </p>
+
 {% endif %}
 
 <br /><br />
