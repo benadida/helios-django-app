@@ -49,7 +49,7 @@ from django.conf import settings
 
 # a helper function
 def get_election_url(election):
-  return settings.SECURE_URL_HOST + reverse(election_shortcut, args=[election.short_name])  
+  return settings.URL_HOST + reverse(election_shortcut, args=[election.short_name])  
 
 # simple static views
 def home(request):
