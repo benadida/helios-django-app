@@ -8,7 +8,8 @@ Ben Adida - ben@adida.net
 import urllib, re, sys, datetime, urlparse, string
 import threading
 
-from django.utils import simplejson
+# utils from auth, too
+from auth.utils import *
 
 from django.conf import settings
   
@@ -63,23 +64,6 @@ def urldecode(str):
 
     return urllib.unquote(str)
 
-def to_json(d):
-  return simplejson.dumps(d, sort_keys=True)
-  
-def from_json(json_str):
-  if not json_str: return None
-  return simplejson.loads(json_str)
-  
-def JSONtoDict(json):
-    x=simplejson.loads(json)
-    return x
-    
-def JSONFiletoDict(filename):
-  f = open(filename, 'r')
-  content = f.read()
-  f.close()
-  return JSONtoDict(content)
-    
 def dictToURLParams(d):
   if d:
     return '&'.join([i + '=' + urlencode(v) for i,v in d.items()])
