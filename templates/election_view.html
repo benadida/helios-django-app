@@ -1,6 +1,6 @@
 {% extends TEMPLATE_BASE %}
 
-
+{% block title %}{{election.name}}{% endblock %}
 {% block content %}
 {% if election.voting_has_started %}
 <script>
@@ -44,10 +44,13 @@ this election is <u>not</u> featured on the front page.
 
 
 <br /><br />
+{% if status_update_message %}
 <span style="margin: 20px;">
 <a name="fb_share" type="box_count" share_url="{{election_url}}" href="http://www.facebook.com/sharer.php?t={{status_update_message|urlencode}}">Share</a><script src="http://static.ak.fbcdn.net/connect.php/js/FB.Share" type="text/javascript"></script></span>
 
 <a href="http://twitter.com/share" class="twitter-share-button" data-url="{{election_url}}" data-text="{{status_update_message}}" data-count="none" data-via="heliosvoting">Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+
+{% endif %}
 
 
 <br clear="left" />
