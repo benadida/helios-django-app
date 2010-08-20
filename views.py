@@ -11,7 +11,7 @@ from django.http import *
 
 from mimetypes import guess_type
 
-import csv
+import csv, urllib
 
 from crypto import algs, electionalgs
 from crypto import utils as cryptoutils
@@ -220,15 +220,33 @@ def one_election_view(request, election):
   # result!
   if election.result:
     status_update_message = "Results are in for %s" % election.name
-    
+  
+  # a URL for the social buttons
+  socialbuttons_url = None
+  if status_update_message:
+    socialbuttons_url = "%s%s?%s" % (settings.SOCIALBUTTONS_URL_HOST,
+                                     reverse(socialbuttons),
+                                     urllib.urlencode({
+          'url' : election_url,
+          'text': status_update_message
+          }))
+
   trustees = Trustee.get_by_election(election)
     
   return render_template(request, 'election_view',
                          {'election' : election, 'trustees': trustees, 'admin_p': admin_p, 'user': user,
                           'voter': voter, 'votes': votes, 'notregistered': notregistered, 'eligible_p': eligible_p,
                           'can_feature_p': can_feature_p, 'election_url' : election_url,
-                          'status_update_message' : status_update_message})
-  
+                          'socialbuttons_url' : socialbuttons_url})
+
+def socialbuttons(request):
+  """
+  just render the social buttons for sharing a URL
+  expecting "url" and "text" in request.GET
+  """
+  return render_template(request, 'socialbuttons',
+                         {'url': request.GET['url'], 'text':request.GET['text']})
+
 ##
 ## Trustees and Public Key
 ##
