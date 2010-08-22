@@ -1,5 +1,6 @@
 {% extends TEMPLATE_BASE %}
 
+{% block title %}Voters for {{election.name}}{% endblock %}
 {% block content %}
   <h2 class="title">{{election.name}} &mdash; Voters <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>]</span></h2>
 
@@ -31,7 +32,9 @@
 
 {% if admin_p and upload_p %}
 <p>
+{% if not election.frozen_at %}
 <a href="{% url helios.views.voters_upload election_uuid=election.uuid %}">bulk upload voters</a>
+{% endif %}
 </p>
 
 {% if voter_files %}
@@ -89,7 +92,7 @@ Voters {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
 {% if not election.frozen_at %}
 [<a onclick="return confirm('are you sure you want to remove {{voter.name}} ?');" href="{% url helios.views.voter_delete election.uuid, voter.uuid %}">x</a>]
 {% endif %}
-{% if election.frozen_at and election.openreg %}
+{% if election.frozen_at and election.openreg and not election.encrypted_tally %}
 [<a onclick="return confirm('are you sure you want to remove {{voter.name}} and the vote he/she has cast?');" href="{% url helios.views.voter_delete election.uuid, voter.uuid %}">x</a>]
 {% endif %}
 {% endif %}

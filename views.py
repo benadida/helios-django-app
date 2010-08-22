@@ -606,6 +606,9 @@ def voter_delete(request, election, voter_uuid):
   if not (election.frozen_at or election.openreg):
     raise PermissionDenied()
 
+  if election.encrypted_tally:
+    raise PermissionDenied()
+
   voter = Voter.get_by_election_and_uuid(election, voter_uuid)
   if voter:
     voter.delete()
