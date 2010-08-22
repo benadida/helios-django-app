@@ -596,13 +596,25 @@ def one_election_audited_ballots(request, election):
   return render_template(request, 'election_audited_ballots', {'election': election, 'audited_ballots': audited_ballots, 'next_after': next_after,
                 'offset': offset, 'limit': limit, 'offset_plus_one': offset+1, 'offset_plus_limit': offset+limit})
 
-@election_admin(frozen=False)
+@election_admin()
 def voter_delete(request, election, voter_uuid):
+  """
+  Two conditions under which a voter can be deleted:
+  - election is not frozen or
+  - election is open reg
+  """
+  if not (election.frozen_at or election.openreg):
+    raise PermissionDenied()
+
   voter = Voter.get_by_election_and_uuid(election, voter_uuid)
   if voter:
     voter.delete()
+
+  if election.frozen_at:
+    # log it
+    election.append_log("Voter %s/%s removed after election frozen" % (voter.voter_type,voter.voter_id))
     
-  return HttpResponseRedirect(reverse(voters_manage, args=[election.uuid]))
+  return HttpResponseRedirect(reverse(voters_list_pretty, args=[election.uuid]))
 
 @election_admin(frozen=False)
 def one_election_set_reg(request, election):

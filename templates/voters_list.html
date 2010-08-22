@@ -4,7 +4,7 @@
   <h2 class="title">{{election.name}} &mdash; Voters <span style="font-size:0.7em;">[<a href="{% url helios.views.one_election_view election.uuid %}">back to election</a>]</span></h2>
 
 <p>
-<u>Registration</u> is currently <b>{{ election.registration_status_pretty }}</b>.
+<u>Registration</u> is {% if not election.frozen_at %}currently{% endif %} <b>{{ election.registration_status_pretty }}</b>.
 {% if admin_p and not election.frozen_at %}
 {% if election.openreg %}
 [<a href="{% url helios.views.one_election_set_reg election.uuid %}?open_p=0">switch to closed</a>]
@@ -85,9 +85,13 @@ Voters {{offset_plus_one}} - {{offset_plus_limit}} &nbsp;&nbsp;
 <tr>
 {% if admin_p or not election.use_voter_aliases %}
 <td>
-{% if election.frozen_at or not admin_p %}
-{% else %}
+{% if admin_p %}
+{% if not election.frozen_at %}
 [<a onclick="return confirm('are you sure you want to remove {{voter.name}} ?');" href="{% url helios.views.voter_delete election.uuid, voter.uuid %}">x</a>]
+{% endif %}
+{% if election.frozen_at and election.openreg %}
+[<a onclick="return confirm('are you sure you want to remove {{voter.name}} and the vote he/she has cast?');" href="{% url helios.views.voter_delete election.uuid, voter.uuid %}">x</a>]
+{% endif %}
 {% endif %}
 <img border="0" height="20" src="/static/auth/login-icons/{{voter.voter_type}}.png" alt="{{voter.voter_type}}" /> {{voter.name}}</td>
 {% endif %}
