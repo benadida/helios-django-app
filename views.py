@@ -798,11 +798,17 @@ def combine_decryptions(request, election):
   extra_vars = {
     'election_url' : get_election_url(election)
     }
-        
+  
+  # full-length email
   tasks.voters_email.delay(election_id = election.id,
                            subject_template = 'email/result_subject.txt',
                            body_template = 'email/result_body.txt',
                            extra_vars = extra_vars)
+
+  # rapid short-message notification
+  tasks.voters_notify.delay(election_id = election.id,
+                            notification_template = 'notification/result.txt',
+                            extra_vars = extra_vars)
   
   return HttpResponseRedirect(reverse(one_election_view, args=[election.uuid]))
 
